@@ -49,7 +49,7 @@
 - **Dependency:** Task 1.2
 
 ### Task 1.4 — Endpoint `GET /auth/me` & Logout
-- **Status:** TODO
+- **Status:** DONE
 - **Output:** endpoint ambil data user login; logout (invalidate token di client, atau blacklist kalau mau lebih aman)
 - **Dependency:** Task 1.3
 
@@ -58,12 +58,12 @@
 ## FASE 2 — Backend: Device Management & Klaim
 
 ### Task 2.1 — Model & repository untuk `devices` dan `device_access`
-- **Status:** TODO
+- **Status:** DONE
 - **Output:** fungsi CRUD dasar + fungsi helper `getUserRoleForDevice(userId, deviceId)`
 - **Dependency:** Task 0.2
 
 ### Task 2.2 — Endpoint Admin: Generate Device Baru
-- **Status:** TODO
+- **Status:** DONE
 - **Output:** `POST /api/v1/admin/devices` — generate `device_code` unik (mis. auto-increment `MC-000X`) + `device_secret` random, simpan hash secret ke DB, return `device_code` + `device_secret` **plaintext hanya sekali** di response
 - **Dependency:** Task 1.3, Task 2.1
 
@@ -262,13 +262,13 @@
 | Fase | Total Task | Selesai |
 |---|---|---|
 | Fase 0 — Fondasi | 3 | 3 |
-| Fase 1 — Auth | 4 | 3 |
-| Fase 2 — Device & Klaim | 6 | 0 |
+| Fase 1 — Auth | 4 | 4 |
+| Fase 2 — Device & Klaim | 6 | 2 |
 | Fase 3 — MQTT & Real-time | 7 | 0 |
 | Fase 4 — Frontend | 12 | 0 |
 | Fase 5 — Firmware | 7 | 0 |
 | Fase 6 — Deployment | 5 | 0 |
-| **TOTAL** | **44** | **6** |
+| **TOTAL** | **44** | **9** |
 
 > Update tabel ini setiap kali sebuah task pindah status jadi DONE, supaya progress keseluruhan gampang dipantau.
 
