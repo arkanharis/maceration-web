@@ -150,15 +150,31 @@
 - **Dependency:** Task 3.4, Task 2.5
 
 ### Task 3.6 — Endpoint History & Events
-- **Status:** TODO
+- **Status:** DONE
 - **Output:** `GET /api/v1/devices/:id/history?from&to`, `GET /api/v1/devices/:id/events`
+- **Files dibuat/diubah:**
+  - `src/services/historyService.js` — baru: `getDeviceHistory()` (cek akses, validasi range max 30 hari, default 1 jam terakhir) dan `getDeviceEvents()` (cek akses, limit max 500)
+  - `src/controllers/historyController.js` — baru: handler `getHistory` dan `getEvents`
+  - `src/routes/deviceRoutes.js` — tambah `GET /:id/history` dan `GET /:id/events`
+- **Test:** events menampilkan 10 event (relay_toggled, device_online/offline, access_revoked); validasi range error mengembalikan 400
 - **Dependency:** Task 3.2
 
 ### Task 3.7 — MQTT Auth & ACL (Device-level)
-- **Status:** TODO
-- **Output:** setup auth plugin Mosquitto (atau webhook auth) supaya device hanya bisa connect dengan `device_code`+`device_secret` valid, dan ACL: device hanya boleh publish/subscribe ke topik miliknya sendiri
-- **Dependency:** Task 3.1, Task 2.2
+- **Status:** DONE
+- **Output:** setup auth plugin Mosquitto via HTTP webhook supaya device hanya bisa connect dengan `device_code`+`device_secret_hash` valid, dan ACL: device hanya boleh publish/subscribe ke topik miliknya sendiri
+- **Files dibuat/diubah:**
+  - `src/repositories/mqttAuthRepository.js` — baru: `authenticateDeviceCredentials()` (query + bcrypt.compare device_secret_hash) dan `isTopicAllowed()` (ACL rules per-device)
+  - `src/controllers/mqttAuthController.js` — baru: `POST /mqtt/auth` (backend superuser via env secret, device via DB) dan `POST /mqtt/acl` (allow-all backend, per-device topic check)
+  - `src/routes/mqttAuthRoutes.js` — baru: route `/mqtt/auth` dan `/mqtt/acl`
+  - `src/index.js` — register `mqttAuthRoutes`, tambah `express.urlencoded()` untuk form-encoded bodies
+  - `mosquitto-prod/mosquitto.conf` — baru: konfigurasi production dengan plugin `mosquitto-go-auth` HTTP backend + Redis cache
+  - `mosquitto-prod/docker-compose.yml` — baru: `iegomez/mosquitto-go-auth` image + Redis service
+  - `mosquitto-dev/mosquitto.conf` — update comment ke arah folder mosquitto-prod/
+  - `backend/.env` — tambah `MQTT_BACKEND_PASSWORD`
+- **ACL rules:** device boleh PUBLISH telemetry/status/command/ack ke topik sendiri; boleh SUBSCRIBE command topik sendiri; semua cross-device diblokir
+- **Test:** 11/11 ACL rules passed (auth superuser, wrong pass, unknown device, 5 allowed, 3 denied)
 - **Catatan:** ini bagian security penting, jangan skip sebelum production
+- **Dependency:** Task 3.1, Task 2.2
 
 ---
 
@@ -296,11 +312,11 @@
 | Fase 0 — Fondasi | 3 | 3 |
 | Fase 1 — Auth | 4 | 4 |
 | Fase 2 — Device & Klaim | 6 | 6 |
-| Fase 3 — MQTT & Real-time | 7 | 5 |
+| Fase 3 — MQTT & Real-time | 7 | 7 |
 | Fase 4 — Frontend | 12 | 0 |
 | Fase 5 — Firmware | 7 | 0 |
 | Fase 6 — Deployment | 5 | 0 |
-| **TOTAL** | **44** | **18** |
+| **TOTAL** | **44** | **20** |
 
 > Update tabel ini setiap kali sebuah task pindah status jadi DONE, supaya progress keseluruhan gampang dipantau.
 
