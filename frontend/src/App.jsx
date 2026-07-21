@@ -1,16 +1,40 @@
-function App() {
-  return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-      <div className="text-center p-8 rounded-xl bg-white shadow-md border border-slate-200">
-        <h1 className="text-2xl font-semibold text-slate-800">
-          Maceration IoT Dashboard
-        </h1>
-        <p className="mt-2 text-slate-500">
-          Frontend scaffold ready. Tailwind is working.
-        </p>
-      </div>
-    </div>
-  )
-}
+import React, { useState } from "react";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import Layout from "./components/Layout.jsx";
+import LoginPage from "./pages/LoginPage.jsx";
+import RegisterPage from "./pages/RegisterPage.jsx";
+import DashboardPage from "./pages/DashboardPage.jsx";
+import DeviceDetailPage from "./pages/DeviceDetailPage.jsx";
+import AdminPage from "./pages/AdminPage.jsx";
+import NotFoundPage from "./pages/NotFoundPage.jsx";
 
-export default App
+export default function App() {
+  // Temporary state for testing Task 4.1 routing & layout.
+  // Real Auth Context will be added in Task 4.3.
+  const [user, setUser] = useState({
+    id: "sample-id",
+    name: "Dr. Arkan Haris",
+    email: "arkan@example.com",
+    global_role: "superadmin",
+  });
+
+  const handleLogout = () => {
+    setUser(null);
+  };
+
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route element={<Layout user={user} onLogout={handleLogout} />}>
+          <Route path="/" element={<DashboardPage />} />
+          <Route path="/devices" element={<DashboardPage />} />
+          <Route path="/devices/:id" element={<DeviceDetailPage />} />
+          <Route path="/admin" element={<AdminPage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
+          <Route path="*" element={<NotFoundPage />} />
+        </Route>
+      </Routes>
+    </BrowserRouter>
+  );
+}

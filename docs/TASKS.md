@@ -181,8 +181,18 @@
 ## FASE 4 — Frontend
 
 ### Task 4.1 — Setup Routing & Layout Dasar
-- **Status:** TODO
-- **Output:** React Router setup, layout dengan navbar + sidebar (kondisional tampil menu admin kalau superadmin), halaman kosong untuk tiap route
+- **Status:** DONE
+- **Output:** React Router setup (`react-router-dom`), layout dengan Navbar + Sidebar (kondisional tampilkan menu superadmin), design system tokens di `index.css` & Google Fonts (Lora, Plus Jakarta Sans, JetBrains Mono), halaman skeleton untuk tiap route (`/login`, `/register`, `/`, `/devices`, `/devices/:id`, `/admin`, 404).
+- **Files dibuat/diubah:**
+  - `frontend/index.html` — import Google Fonts (Lora, Plus Jakarta Sans, JetBrains Mono)
+  - `frontend/src/index.css` — import Tailwind v4 & setup visual identity tokens (`#F9F8F3` parchment, `#F1F0EA` surface, `#1A1A1A` charcoal, `#D97736` amber gold, `#3A5F43` sage green, `#C84B31` terracotta, crisp borders & lab-card utilities)
+  - `frontend/src/components/Navbar.jsx` — header brand "MACERATION.LAB", badge role user, button logout
+  - `frontend/src/components/Sidebar.jsx` — navigasi lab (Dashboard, Alat Saya, Dibagikan), menu Superadmin kondisional, indicator MQTT broker
+  - `frontend/src/components/Layout.jsx` — wrapper Navbar + Sidebar + `<Outlet />`
+  - `frontend/src/pages/` — `LoginPage.jsx`, `RegisterPage.jsx`, `DashboardPage.jsx`, `DeviceDetailPage.jsx`, `AdminPage.jsx`, `NotFoundPage.jsx`
+  - `frontend/src/App.jsx` — setup `BrowserRouter` dan nested routes
+  - `frontend/package.json` — tambah dependency `react-router-dom`, `lucide-react`, `socket.io-client`, `recharts`
+- **Test:** `npm run build` sukses (1.98s, 0 error)
 - **Dependency:** Task 0.1
 
 ### Task 4.2 — Halaman Login & Register
@@ -313,10 +323,10 @@
 | Fase 1 — Auth | 4 | 4 |
 | Fase 2 — Device & Klaim | 6 | 6 |
 | Fase 3 — MQTT & Real-time | 7 | 7 |
-| Fase 4 — Frontend | 12 | 0 |
+| Fase 4 — Frontend | 12 | 1 |
 | Fase 5 — Firmware | 7 | 0 |
 | Fase 6 — Deployment | 5 | 0 |
-| **TOTAL** | **44** | **20** |
+| **TOTAL** | **44** | **21** |
 
 > Update tabel ini setiap kali sebuah task pindah status jadi DONE, supaya progress keseluruhan gampang dipantau.
 
