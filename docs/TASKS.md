@@ -300,35 +300,34 @@
 
 ## FASE 5 — Firmware ESP32
 
-### Task 5.1 — Buat `config.h` template
-- **Status:** TODO
-- **Output:** file config terpisah berisi WiFi credential, MQTT broker info, device_code, device_secret (per unit)
-- **Dependency:** Task 3.7 (butuh tahu skema auth final)
-
-### Task 5.2 — Tambah koneksi WiFi ke sketch
-- **Status:** TODO
-- **Output:** fungsi `setupWiFi()` + auto-reconnect, dipanggil di `setup()`, tidak mengubah logic relay/tombol yang sudah ada
-- **Dependency:** Task 5.1
-
-### Task 5.3 — Tambah koneksi MQTT ke sketch
-- **Status:** TODO
-- **Output:** fungsi `setupMQTT()`, koneksi pakai device_code/secret, set LWT ke topik status, auto-reconnect
-- **Dependency:** Task 5.2, Task 3.7
-
-### Task 5.4 — Publish Telemetry
-- **Status:** TODO
-- **Output:** modifikasi `handleTemperature()`/`handleSpeedSensor()` (atau fungsi baru terpisah) untuk susun JSON payload dan publish ke topik telemetry tiap interval
-- **Dependency:** Task 5.3
-
-### Task 5.5 — Subscribe & Handle Command
-- **Status:** TODO
-- **Output:** `mqttCallback()` untuk terima command `set_relay`, panggil fungsi toggle relay yang sudah dimodifikasi supaya bisa dipanggil dari command (bukan hanya dari tombol fisik), publish `command/ack`
-- **Dependency:** Task 5.4
-
-### Task 5.6 — Refactor blocking `delay()` jadi non-blocking
-- **Status:** TODO
-- **Output:** pastikan `mqttClient.loop()` tidak terblokir oleh `delay()` di buzzer/toggle relay (pakai `millis()` timing seperti pola yang sudah dipakai di `handleButtons()`)
-- **Dependency:** Task 5.5
+### Task 5.1–5.6 — Firmware ESP32 (WiFi, MQTT, Telemetry, Command, Non-blocking)
+- **Status:** DONE
+- **Output:** `firmware/config.h` + `firmware/maceration.ino` lengkap dengan semua fitur konektivitas
+- **Files dibuat/diubah:**
+  - `firmware/config.h` — konstanta statis saja (pin, interval, nama AP portal); credential TIDAK hardcode
+  - `firmware/maceration.ino` — firmware lengkap:
+    - **WiFiManager** (tzapu): captive portal AP "Maceration-Setup" untuk konfigurasi WiFi + MQTT Broker + Device Code + Device Secret via browser — tidak perlu hardcode, semua disimpan ke NVS (Preferences)
+    - **Factory reset**: tahan GPIO 0 (tombol BOOT) 3 detik → hapus semua konfigurasi, restart, portal muncul lagi
+    - **MQTT**: LWT online/offline (retained), subscribe `command`, publish `telemetry` tiap 1 detik, publish `command/ack` setelah eksekusi relay
+    - **`setRelay(idx, value)`**: dapat dipanggil dari command MQTT maupun tombol fisik
+    - **`publishTelemetry()`**: JSON `{temperature, rpm, relay:{r1-r4}, ts}`
+    - **`mqttCallback()`**: parse `set_relay` command, map r1-r4 → idx, eksekusi relay, publish ack
+    - **Non-blocking buzzer**: millis state machine (MELODY_STARTUP, RELAY_BEEP, WIFI_OK, MQTT_OK, ERROR)
+    - **Auto-reconnect**: WiFi (`WiFi.reconnect()`) + MQTT (coba ulang tiap 5 detik)
+  - `firmware/.gitignore` — exclude build artifacts
+- **Library yang diperlukan** (install via Arduino Library Manager):
+  - `WiFiManager` by tzapu
+  - `PubSubClient` by Nick O'Leary
+  - `ArduinoJson` by Benoit Blanchon (v6.x)
+  - `OneWire` by Paul Stoffregen
+  - `DallasTemperature` by Miles Burton
+- **Alur konfigurasi unit baru:**
+  1. Flash firmware
+  2. Boot → ESP32 buka AP "Maceration-Setup" (pass: `setup1234`)
+  3. Connect ke AP dari HP/laptop → browser otomatis buka portal (atau manual ke 192.168.4.1)
+  4. Isi: WiFi SSID+Pass, MQTT Broker IP, Port, Device Code (dari admin dashboard), Device Secret
+  5. Submit → ESP32 restart → langsung online
+- **Dependency:** Task 3.7, Task 2.2
 
 ### Task 5.7 — Testing end-to-end dengan 1 unit fisik
 - **Status:** TODO
@@ -370,9 +369,9 @@
 | Fase 2 — Device & Klaim | 6 | 6 |
 | Fase 3 — MQTT & Real-time | 7 | 7 |
 | Fase 4 — Frontend | 12 | 12 |
-| Fase 5 — Firmware | 7 | 0 |
+| Fase 5 — Firmware | 7 | 6 |
 | Fase 6 — Deployment | 5 | 0 |
-| **TOTAL** | **44** | **32** |
+| **TOTAL** | **44** | **38** |
 
 > Update tabel ini setiap kali sebuah task pindah status jadi DONE, supaya progress keseluruhan gampang dipantau.
 

@@ -1,0 +1,17 @@
+# Jangan commit file yang berisi credential asli
+# config.h hanya berisi konstanta statis, aman di-commit
+# Tapi kalau kamu punya versi lokal dengan isi credential, masukkan ke sini:
+# config_local.h
+
+# Arduino build output
+build/
+*.bin
+*.elf
+*.hex
+*.map
+
+# Arduino IDE cache
+.arduino15/
+
+# VS Code
+.vscode/
