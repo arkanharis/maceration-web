@@ -68,24 +68,30 @@
 - **Dependency:** Task 1.3, Task 2.1
 
 ### Task 2.3 — Endpoint Klaim Alat
-- **Status:** TODO
+- **Status:** DONE
 - **Output:** `POST /api/v1/devices/claim` — body `{device_code}`, cek status `unclaimed`, set `owner_id`, insert ke `device_access` sebagai role `owner`, catat ke `device_events`
 - **Acceptance criteria:** device sudah diklaim tidak bisa diklaim ulang, device_code tidak ada → error jelas
 - **Dependency:** Task 2.2
 
 ### Task 2.4 — Endpoint List & Detail Device (dengan permission check)
-- **Status:** TODO
+- **Status:** DONE
 - **Output:** `GET /api/v1/devices` (list device milik user login berdasarkan `device_access`), `GET /api/v1/devices/:id` (detail, cek user punya akses)
 - **Dependency:** Task 2.3
 
 ### Task 2.5 — Endpoint Kelola Akses (Sharing)
-- **Status:** TODO
+- **Status:** DONE
 - **Output:** `GET/POST/PATCH/DELETE /api/v1/devices/:id/access` — hanya owner yang boleh akses endpoint ini, share by email (kalau email belum terdaftar, kasih pesan jelas)
 - **Dependency:** Task 2.4
 
 ### Task 2.6 — Endpoint Admin: List semua device & user
-- **Status:** TODO
+- **Status:** DONE
 - **Output:** `GET /api/v1/admin/devices`, `GET /api/v1/admin/users`, `PATCH /api/v1/admin/users/:id`
+- **Files dibuat/diubah:**
+  - `src/repositories/deviceRepository.js` — `listAllDevices()` ditambah JOIN ke `users` untuk nama & email owner
+  - `src/repositories/userRepository.js` — `listAllUsers()` baru, include `owned_device_count`
+  - `src/services/adminService.js` — baru, berisi `adminListAllDevices`, `adminListAllUsers`, `adminUpdateUserRole` (dengan guard self-demotion & validasi role)
+  - `src/controllers/adminController.js` — baru, 3 handler: `adminGetAllDevices`, `adminGetAllUsers`, `adminPatchUserRole`
+  - `src/routes/adminRoutes.js` — tambah 3 route baru (`GET /devices`, `GET /users`, `PATCH /users/:id`)
 - **Dependency:** Task 1.3, Task 2.4
 
 ---
@@ -263,12 +269,12 @@
 |---|---|---|
 | Fase 0 — Fondasi | 3 | 3 |
 | Fase 1 — Auth | 4 | 4 |
-| Fase 2 — Device & Klaim | 6 | 2 |
+| Fase 2 — Device & Klaim | 6 | 6 |
 | Fase 3 — MQTT & Real-time | 7 | 0 |
 | Fase 4 — Frontend | 12 | 0 |
 | Fase 5 — Firmware | 7 | 0 |
 | Fase 6 — Deployment | 5 | 0 |
-| **TOTAL** | **44** | **9** |
+| **TOTAL** | **44** | **13** |
 
 > Update tabel ini setiap kali sebuah task pindah status jadi DONE, supaya progress keseluruhan gampang dipantau.
 

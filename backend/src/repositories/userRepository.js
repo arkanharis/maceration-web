@@ -72,3 +72,22 @@ export async function updateUserRole(id, globalRole) {
   const { rows } = await pool.query(query, [id, globalRole]);
   return rows[0] || null;
 }
+
+/**
+ * List all users in the system (admin panel, Task 2.6).
+ * Includes a count of how many devices each user owns (owner role),
+ * useful for the superadmin overview.
+ * @returns {Promise<Object[]>}
+ */
+export async function listAllUsers() {
+  const query = `
+    SELECT u.id, u.name, u.email, u.global_role, u.created_at,
+           COUNT(d.id)::int AS owned_device_count
+    FROM users u
+    LEFT JOIN devices d ON d.owner_id = u.id
+    GROUP BY u.id
+    ORDER BY u.created_at DESC
+  `;
+  const { rows } = await pool.query(query);
+  return rows;
+}

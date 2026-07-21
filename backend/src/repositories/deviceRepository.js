@@ -96,14 +96,18 @@ export async function findDeviceByCodeWithSecret(deviceCode) {
 
 /**
  * List all devices (used by admin panel, Task 2.6).
+ * Joins owner name & email for the admin overview so there's no N+1 lookup.
  * @returns {Promise<Object[]>}
  */
 export async function listAllDevices() {
   const query = `
-    SELECT id, device_code, name, status, connection_status, last_seen_at,
-           owner_id, created_at, claimed_at
-    FROM devices
-    ORDER BY created_at DESC
+    SELECT d.id, d.device_code, d.name, d.status, d.connection_status,
+           d.last_seen_at, d.owner_id, d.created_at, d.claimed_at,
+           u.name  AS owner_name,
+           u.email AS owner_email
+    FROM devices d
+    LEFT JOIN users u ON u.id = d.owner_id
+    ORDER BY d.created_at DESC
   `;
   const { rows } = await pool.query(query);
   return rows;
