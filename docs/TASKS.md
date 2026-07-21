@@ -109,8 +109,14 @@
 - **Dependency:** Task 0.3
 
 ### Task 3.2 — Handler Telemetry → Simpan DB + Broadcast
-- **Status:** TODO
-- **Output:** saat terima pesan telemetry, parse payload, insert ke `device_logs`, update `devices.last_seen_at`, broadcast via Socket.IO ke room device tsb
+- **Status:** DONE
+- **Output:** saat terima pesan telemetry, parse payload, insert ke `device_logs`, update `devices.last_seen_at`, broadcast `telemetry_update` via Socket.IO ke room device tsb
+- **Files dibuat/diubah:**
+  - `src/repositories/deviceLogRepository.js` — baru, `insertLog()` + `listLogsForDevice()` (untuk Task 3.6)
+  - `src/config/socket.js` — baru, singleton Socket.IO (`initSocketIO`, `getIO`); CORS-configurable; room subscription detail ditambah di Task 3.4
+  - `src/services/telemetryService.js` — baru, `handleTelemetry()`: resolve device_code→id (cache 1 menit), parallel `insertLog` + `touchDeviceLastSeen`, broadcast `telemetry_update` ke room
+  - `src/index.js` — ganti `app.listen` dengan `http.createServer` + `initSocketIO`; pasang `handleTelemetry` sebagai MQTT handler nyata
+  - `package.json` — tambah dependency `socket.io`
 - **Dependency:** Task 3.1, Task 2.1
 
 ### Task 3.3 — Handler Status Online/Offline
@@ -275,11 +281,11 @@
 | Fase 0 — Fondasi | 3 | 3 |
 | Fase 1 — Auth | 4 | 4 |
 | Fase 2 — Device & Klaim | 6 | 6 |
-| Fase 3 — MQTT & Real-time | 7 | 1 |
+| Fase 3 — MQTT & Real-time | 7 | 2 |
 | Fase 4 — Frontend | 12 | 0 |
 | Fase 5 — Firmware | 7 | 0 |
 | Fase 6 — Deployment | 5 | 0 |
-| **TOTAL** | **44** | **14** |
+| **TOTAL** | **44** | **15** |
 
 > Update tabel ini setiap kali sebuah task pindah status jadi DONE, supaya progress keseluruhan gampang dipantau.
 
