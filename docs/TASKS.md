@@ -196,13 +196,22 @@
 - **Dependency:** Task 0.1
 
 ### Task 4.2 — Halaman Login & Register
-- **Status:** TODO
-- **Output:** form login/register, simpan JWT (mis. di memory/context, bukan localStorage kalau mau lebih aman — atau localStorage untuk kesederhanaan skala kecil), redirect ke dashboard setelah sukses
+- **Status:** DONE
+- **Output:** Form login & register dengan state management, handling loading/error alert, terintegrasi dengan REST API (`POST /auth/login` & `POST /auth/register`) & `AuthContext`, redirect ke dashboard/halaman yang diminta setelah sukses.
+- **Files dibuat/diubah:**
+  - `frontend/src/pages/LoginPage.jsx` — form email & password, error handling, redirect ke `state.from` / `/`
+  - `frontend/src/pages/RegisterPage.jsx` — form nama, email, & password (min 6 karakter), error handling, redirect ke `/`
 - **Dependency:** Task 1.2, Task 4.1
 
 ### Task 4.3 — Auth Context & Protected Routes
-- **Status:** TODO
-- **Output:** context React yang simpan user login, redirect ke `/login` kalau belum auth, attach JWT ke semua request axios/fetch
+- **Status:** DONE
+- **Output:** `AuthContext` React (menyimpan state `user`, `token`, `login`, `register`, `logout`), otentikasi awal berbasis `localStorage`, persentensi sesi (`GET /auth/me`), `ProtectedRoute` component untuk me-redirect user yang belum login ke `/login` dan membatasi rute `/admin` khusus superadmin, serta client helper (`apiFetch`).
+- **Files dibuat/diubah:**
+  - `frontend/src/services/api.js` — wrapper `apiFetch` (otomatis menyematkan `Authorization: Bearer <token>` dari localStorage) & auth endpoints helper (`login`, `register`, `getMe`)
+  - `frontend/src/context/AuthContext.jsx` — `AuthProvider` & `useAuth` custom hook
+  - `frontend/src/components/ProtectedRoute.jsx` — guard rute publik/terproteksi/superadmin dengan loading spinner
+  - `frontend/src/App.jsx` — membungkus rute dengan `<AuthProvider>` dan `<ProtectedRoute>`
+- **Test:** `npm run build` sukses (1.97s, 0 error)
 - **Dependency:** Task 4.2
 
 ### Task 4.4 — Dashboard Utama (List Device)
@@ -323,10 +332,10 @@
 | Fase 1 — Auth | 4 | 4 |
 | Fase 2 — Device & Klaim | 6 | 6 |
 | Fase 3 — MQTT & Real-time | 7 | 7 |
-| Fase 4 — Frontend | 12 | 1 |
+| Fase 4 — Frontend | 12 | 3 |
 | Fase 5 — Firmware | 7 | 0 |
 | Fase 6 — Deployment | 5 | 0 |
-| **TOTAL** | **44** | **21** |
+| **TOTAL** | **44** | **23** |
 
 > Update tabel ini setiap kali sebuah task pindah status jadi DONE, supaya progress keseluruhan gampang dipantau.
 
