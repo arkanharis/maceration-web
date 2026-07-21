@@ -235,38 +235,65 @@
 - **Dependency:** Task 2.3, Task 4.4
 
 ### Task 4.6 — Halaman Detail Alat: Live Data Panel
-- **Status:** TODO
-- **Output:** koneksi Socket.IO, subscribe ke device saat halaman dibuka, tampilkan angka suhu/RPM real-time + mini grafik (Recharts) dari data yang masuk
+- **Status:** DONE
+- **Output:** Detail instrumen dengan header (nama, `device_code`, connection status `ONLINE/OFFLINE` dengan live pulse dot, last seen time), stat cards (suhu °C & RPM), & koneksi Socket.IO real-time (otomatis join room `subscribe_device` `{ deviceId }`, dengarkan `telemetry_update` & `device_status_changed`).
+- **Files dibuat/diubah:**
+  - `frontend/src/pages/DeviceDetailPage.jsx` — halaman detail alat utama dengan Socket.IO room subscription & state telemetry real-time
+- **Test:** `npm run build` sukses (2.51s, 0 error)
 - **Dependency:** Task 3.4, Task 4.4
 
 ### Task 4.7 — Halaman Detail Alat: Kontrol Relay
-- **Status:** TODO
-- **Output:** 4 toggle switch, disabled kalau role viewer, kirim command via Socket.IO/REST, tampilkan status loading sampai `command_ack` diterima
+- **Status:** DONE
+- **Output:** 4 toggle switch (R1 Heater, R2 Stirrer Motor, R3 Solenoid Valve, R4 Aux), disabled jika alat offline atau role `viewer`, mengirim perintah sakelar via Socket.IO (`send_command`) dengan fallback REST API (`POST /devices/:id/command`), & animasi loading spinner di sakelar saat menunggu ACK (`command_ack`).
+- **Files dibuat/diubah:**
+  - `frontend/src/components/device/RelayControlPanel.jsx` — komponen sakelar relay 4-saluran
+  - `frontend/src/pages/DeviceDetailPage.jsx` — integrasi tab Kontrol Relay Live
+- **Test:** `npm run build` sukses (2.51s, 0 error)
 - **Dependency:** Task 3.5, Task 4.6
 
 ### Task 4.8 — Tab History (Grafik + Filter Waktu)
-- **Status:** TODO
-- **Output:** grafik line chart suhu & RPM dengan filter 1 jam/24 jam/7 hari, fetch dari `GET /devices/:id/history`
+- **Status:** DONE
+- **Output:** Grafik line chart suhu (°C) & RPM dengan Recharts, disesuaikan estetika *Digital Apothecary* (garis Sage Green `#3A5F43` & Amber Gold `#D97736`, custom JetBrains Mono tooltip), & filter rentang waktu (1 Jam, 24 Jam, 7 Hari) dari REST API `GET /devices/:id/history`.
+- **Files dibuat/diubah:**
+  - `frontend/src/components/device/TelemetryChart.jsx` — komponen grafik histori Recharts dengan range filter
+  - `frontend/src/pages/DeviceDetailPage.jsx` — integrasi tab Riwayat Sensor (Grafik)
+- **Test:** `npm run build` sukses (2.51s, 0 error)
 - **Dependency:** Task 3.6, Task 4.6
 
 ### Task 4.9 — Tab Aktivitas (Event Log)
-- **Status:** TODO
-- **Output:** list log aktivitas (relay toggle, klaim, akses berubah, online/offline) dari `GET /devices/:id/events`
+- **Status:** DONE
+- **Output:** Daftar rekaman audit trail (`relay_toggled`, `device_online`, `device_offline`, `access_granted`, `access_revoked`, `device_claimed`), timestamps format `JetBrains Mono`, detail event, & tombol refresh dari REST API `GET /devices/:id/events`.
+- **Files dibuat/diubah:**
+  - `frontend/src/components/device/ActivityLogTab.jsx` — komponen tab log aktivitas instrumen
+  - `frontend/src/pages/DeviceDetailPage.jsx` — integrasi tab Log Aktivitas
+- **Test:** `npm run build` sukses (2.51s, 0 error)
 - **Dependency:** Task 3.6, Task 4.6
 
-### Task 4.10 — Tab Kelola Akses (khusus Owner)
-- **Status:** TODO
-- **Output:** list user dengan akses + role, form undang user baru by email, tombol ubah/cabut akses
+### Task 4.10 — Tab Kelola Akses & Edit/Lepas Alat (khusus Owner)
+- **Status:** DONE
+- **Output:** Tab khusus owner untuk ubah nama alat (`PATCH /devices/:id`), daftar pengguna berbagi akses (`GET /devices/:id/access`), form undang user baru (`POST /devices/:id/access`), ubah role `operator/viewer` (`PATCH /devices/:id/access/:userId`), cabut akses (`DELETE /devices/:id/access/:userId`), & danger zone lepas alat (`DELETE /devices/:id`).
+- **Files dibuat/diubah:**
+  - `frontend/src/components/device/AccessControlTab.jsx` — komponen kelola akses & bahaya lepas alat
+  - `frontend/src/pages/DeviceDetailPage.jsx` — integrasi tab Kelola Akses & Pengaturan (kondisional owner)
+- **Test:** `npm run build` sukses (2.51s, 0 error)
 - **Dependency:** Task 2.5, Task 4.6
 
 ### Task 4.11 — Filter "Alat Saya" vs "Dibagikan ke Saya"
-- **Status:** TODO
-- **Output:** tab/filter di dashboard berdasarkan role user di tiap device
+- **Status:** DONE
+- **Output:** Filter tab di dashboard utama (*Semua Instrumen*, *Milik Saya (Owner)*, *Dibagikan ke Saya (Operator/Viewer)*) yang menyaring kartu alat secara instan berbasis URL search query `?filter=owned` dan `?filter=shared`.
+- **Files dibuat/diubah:**
+  - `frontend/src/pages/DashboardPage.jsx` — tab filter berbasis `useSearchParams`
+  - `frontend/src/components/Sidebar.jsx` — link navigasi filter cepat
+- **Test:** `npm run build` sukses (2.51s, 0 error)
 - **Dependency:** Task 4.4
 
 ### Task 4.12 — Panel Admin (khusus Superadmin)
-- **Status:** TODO
-- **Output:** halaman list semua device (claimed/unclaimed + owner), tombol generate device baru (modal tampilkan device_code+secret sekali), list & kelola role user
+- **Status:** DONE
+- **Output:** Halaman administrasi sistem (`/admin`), daftar seluruh instrumen sistem (`GET /admin/devices`), modal generate device baru (`POST /admin/devices`) dengan tampilan `device_code` & `device_secret` plaintext **SEKALI SAJA** beserta tombol salin & peringatan keamanan, serta daftar pengguna global & dropdown ubah `global_role` (`superadmin` <-> `user`).
+- **Files dibuat/diubah:**
+  - `frontend/src/pages/AdminPage.jsx` — halaman lengkap panel administrasi superadmin
+  - `frontend/src/services/api.js` — tambah `adminApi` endpoints (`getDevices`, `generateDevice`, `getUsers`, `updateUserRole`)
+- **Test:** `npm run build` sukses (2.51s, 0 error)
 - **Dependency:** Task 2.2, Task 2.6, Task 4.3
 
 ---
@@ -342,10 +369,10 @@
 | Fase 1 — Auth | 4 | 4 |
 | Fase 2 — Device & Klaim | 6 | 6 |
 | Fase 3 — MQTT & Real-time | 7 | 7 |
-| Fase 4 — Frontend | 12 | 5 |
+| Fase 4 — Frontend | 12 | 12 |
 | Fase 5 — Firmware | 7 | 0 |
 | Fase 6 — Deployment | 5 | 0 |
-| **TOTAL** | **44** | **25** |
+| **TOTAL** | **44** | **32** |
 
 > Update tabel ini setiap kali sebuah task pindah status jadi DONE, supaya progress keseluruhan gampang dipantau.
 
