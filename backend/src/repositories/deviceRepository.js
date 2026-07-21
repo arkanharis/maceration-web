@@ -28,6 +28,24 @@ export async function createDevice({ deviceCode, deviceSecretHash, name }) {
 }
 
 /**
+ * Get the next available numeric suffix for device_code generation
+ * (e.g. if MC-0001..MC-0003 exist, returns 4). Used by the admin
+ * "generate device" flow (Task 2.2) to produce codes like "MC-0004".
+ *
+ * Reads the highest existing numeric suffix directly from device_code
+ * values, so it works correctly even if devices are later deleted.
+ * @returns {Promise<number>}
+ */
+export async function getNextDeviceCodeNumber() {
+  const query = `
+    SELECT COALESCE(MAX(CAST(SUBSTRING(device_code FROM 'MC-(\\d+)$') AS INTEGER)), 0) AS max_num
+    FROM devices
+  `;
+  const { rows } = await pool.query(query);
+  return Number(rows[0].max_num) + 1;
+}
+
+/**
  * Find a device by its id. Excludes device_secret_hash.
  * @param {string} id - UUID
  * @returns {Promise<Object|null>}
