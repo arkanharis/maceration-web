@@ -130,8 +130,11 @@
 - **Dependency:** Task 3.2
 
 ### Task 3.4 — Setup Socket.IO Server & Room per Device
-- **Status:** TODO
+- **Status:** DONE
 - **Output:** event `subscribe_device`/`unsubscribe_device` dengan permission check (pakai `getUserRoleForDevice`), join/leave room
+- **Files dibuat/diubah:**
+  - `src/config/socket.js` — full rewrite: JWT auth middleware (`authenticateSocket`) dipasang sebagai `_io.use()`; handler `subscribe_device` (validasi device exist, cek role via `getUserRoleForDevice`, join room, acknowledge dengan role); handler `unsubscribe_device` (leave room); log connect/disconnect per user
+- **Test:** 6/6 passed (no token → rejected, invalid token → rejected, valid token → connected, subscribe owned device → role returned, subscribe inaccessible device → access denied, unsubscribe → OK)
 - **Dependency:** Task 2.4, Task 3.1
 
 ### Task 3.5 — Endpoint/Event Kirim Command (Kontrol Relay)
@@ -286,11 +289,11 @@
 | Fase 0 — Fondasi | 3 | 3 |
 | Fase 1 — Auth | 4 | 4 |
 | Fase 2 — Device & Klaim | 6 | 6 |
-| Fase 3 — MQTT & Real-time | 7 | 3 |
+| Fase 3 — MQTT & Real-time | 7 | 4 |
 | Fase 4 — Frontend | 12 | 0 |
 | Fase 5 — Firmware | 7 | 0 |
 | Fase 6 — Deployment | 5 | 0 |
-| **TOTAL** | **44** | **16** |
+| **TOTAL** | **44** | **17** |
 
 > Update tabel ini setiap kali sebuah task pindah status jadi DONE, supaya progress keseluruhan gampang dipantau.
 
