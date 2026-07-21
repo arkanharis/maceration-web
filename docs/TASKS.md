@@ -138,8 +138,15 @@
 - **Dependency:** Task 2.4, Task 3.1
 
 ### Task 3.5 — Endpoint/Event Kirim Command (Kontrol Relay)
-- **Status:** TODO
+- **Status:** DONE
 - **Output:** `POST /api/v1/devices/:id/command` DAN event Socket.IO `send_command` — cek role owner/operator, publish ke topik `command`, tunggu/handle `command/ack`
+- **Files dibuat/diubah:**
+  - `src/services/commandService.js` — baru: pending-ack map dengan timeout 8 detik, `sendCommand()` (validasi input + permission + publish + wait ack + log event + broadcast `command_ack` ke room), `resolveCommandAck()` (dipanggil saat MQTT ack masuk)
+  - `src/controllers/commandController.js` — baru: handler `POST /devices/:id/command`
+  - `src/routes/deviceRoutes.js` — tambah route `POST /:id/command`
+  - `src/config/socket.js` — tambah event `send_command` (jalur realtime, memanggil `sendCommand()` yang sama)
+  - `src/index.js` — wire `resolveCommandAck` sebagai `onCommandAck` MQTT handler
+- **Test:** 3/3 passed (valid command+ack via fake ESP32, viewer denied 403, invalid relay 400)
 - **Dependency:** Task 3.4, Task 2.5
 
 ### Task 3.6 — Endpoint History & Events
@@ -289,11 +296,11 @@
 | Fase 0 — Fondasi | 3 | 3 |
 | Fase 1 — Auth | 4 | 4 |
 | Fase 2 — Device & Klaim | 6 | 6 |
-| Fase 3 — MQTT & Real-time | 7 | 4 |
+| Fase 3 — MQTT & Real-time | 7 | 5 |
 | Fase 4 — Frontend | 12 | 0 |
 | Fase 5 — Firmware | 7 | 0 |
 | Fase 6 — Deployment | 5 | 0 |
-| **TOTAL** | **44** | **17** |
+| **TOTAL** | **44** | **18** |
 
 > Update tabel ini setiap kali sebuah task pindah status jadi DONE, supaya progress keseluruhan gampang dipantau.
 

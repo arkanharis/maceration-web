@@ -11,6 +11,7 @@ import { initSocketIO } from "./config/socket.js";
 import { initMqttHandlers } from "./services/mqttService.js";
 import { handleTelemetry } from "./services/telemetryService.js";
 import { handleStatus } from "./services/statusService.js";
+import { resolveCommandAck } from "./services/commandService.js";
 
 // Trigger MQTT connection on startup
 import "./config/mqtt.js";
@@ -41,10 +42,7 @@ initMqttHandlers({
 
   onStatus: handleStatus,
 
-  onCommandAck: (deviceCode, payload) => {
-    // Task 3.5: forward ack to the waiting Socket.IO room
-    console.log(`[mqtt:command/ack] ${deviceCode}`, payload);
-  },
+  onCommandAck: resolveCommandAck,
 });
 
 // ── Start ─────────────────────────────────────────────────────────────────────

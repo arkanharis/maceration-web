@@ -3,6 +3,7 @@ import { verifyToken } from "../utils/jwt.js";
 import { findUserById } from "../repositories/userRepository.js";
 import { getUserRoleForDevice } from "../repositories/deviceAccessRepository.js";
 import { findDeviceById } from "../repositories/deviceRepository.js";
+import { sendCommand, CommandError } from "../services/commandService.js";
 
 /**
  * Socket.IO singleton.
@@ -124,6 +125,39 @@ function registerSocketHandlers(socket) {
     await socket.leave(deviceId);
     console.log(`[socket.io] ${user.email} left room ${deviceId}`);
     respond({ ok: true });
+  });
+
+  // ── send_command ───────────────────────────────────────────────────────────
+  /**
+   * Client emits: { deviceId, action, relay, value }
+   * Realtime alternative to POST /devices/:id/command — same sendCommand()
+   * service under the hood, but without an HTTP round-trip.
+   * Acknowledges with: { ok: true, ack } | { ok: false, error }
+   */
+  socket.on("send_command", async ({ deviceId, action, relay, value } = {}, ack) => {
+    const respond = typeof ack === "function" ? ack : () => {};
+
+    try {
+      if (!deviceId || !action || !relay || value === undefined) {
+        return respond({ ok: false, error: "deviceId, action, relay, and value are required" });
+      }
+
+      const result = await sendCommand({
+        deviceId,
+        userId: user.id,
+        action,
+        relay,
+        value,
+      });
+
+      respond({ ok: true, ack: result });
+    } catch (err) {
+      if (err instanceof CommandError) {
+        return respond({ ok: false, error: err.message });
+      }
+      console.error("[socket.io] send_command error:", err);
+      respond({ ok: false, error: "internal error" });
+    }
   });
 
   // ── disconnect ─────────────────────────────────────────────────────────────

@@ -6,6 +6,7 @@ import {
   patchDeviceAccess,
   deleteDeviceAccess,
 } from "../controllers/deviceAccessController.js";
+import { postDeviceCommand } from "../controllers/commandController.js";
 import { requireAuth } from "../middlewares/requireAuth.js";
 
 const router = Router();
@@ -13,6 +14,7 @@ const router = Router();
 router.get("/", requireAuth, listDevices);
 router.post("/claim", requireAuth, claimDevice);
 router.get("/:id", requireAuth, getDevice);
+router.post("/:id/command", requireAuth, postDeviceCommand);
 
 router.get("/:id/access", requireAuth, getDeviceAccessList);
 router.post("/:id/access", requireAuth, postDeviceAccess);
