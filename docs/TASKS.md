@@ -215,13 +215,23 @@
 - **Dependency:** Task 4.2
 
 ### Task 4.4 — Dashboard Utama (List Device)
-- **Status:** TODO
-- **Output:** halaman grid kartu device (nama, status online/offline, preview suhu/RPM, badge role), fetch dari `GET /devices`
+- **Status:** DONE
+- **Output:** Halaman grid kartu instrumen (nama, kode, status online/offline dengan live pulse, preview telemetri suhu & RPM, badge role Owner/Operator/Viewer), filter tab (Semua/Milik Saya/Dibagikan), search bar, & listener real-time Socket.IO (`telemetry_update` & `device_status_changed`).
+- **Files dibuat/diubah:**
+  - `frontend/src/services/api.js` — tambah `deviceApi` endpoints (`getDevices`, `getDevice`, `claimDevice`, `updateDevice`, `releaseDevice`, `sendCommand`, `getHistory`, `getEvents`, `getAccessList`, dll)
+  - `frontend/src/services/socket.js` — Socket.IO client manager dengan token handshake & auto-reconnect
+  - `frontend/src/components/DeviceCard.jsx` — kartu instrumen berdesain *Digital Apothecary* (JetBrains Mono angka, Lora serif judul, Sage Green & Amber Gold badges)
+  - `frontend/src/pages/DashboardPage.jsx` — halaman utama dashboard dengan state management & Socket.IO listener
+- **Test:** `npm run build` sukses (1.79s, 0 error)
 - **Dependency:** Task 2.4, Task 4.3
 
 ### Task 4.5 — Modal Klaim Alat
-- **Status:** TODO
-- **Output:** modal input Device ID, panggil `POST /devices/claim`, refresh list device setelah sukses
+- **Status:** DONE
+- **Output:** Modal dialog berbasis lab-card aesthetic untuk klaim alat baru (input `device_code` seperti `MC-0001`), panggil REST API `POST /devices/claim`, validasi input, alert error/sukses, & auto-refresh list device setelah klaim.
+- **Files dibuat/diubah:**
+  - `frontend/src/components/ClaimDeviceModal.jsx` — modal dialog klaim alat baru
+  - `frontend/src/pages/DashboardPage.jsx` — integrasi modal klaim dengan tombol "+ Klaim Alat Baru"
+- **Test:** `npm run build` sukses (1.79s, 0 error)
 - **Dependency:** Task 2.3, Task 4.4
 
 ### Task 4.6 — Halaman Detail Alat: Live Data Panel
@@ -332,10 +342,10 @@
 | Fase 1 — Auth | 4 | 4 |
 | Fase 2 — Device & Klaim | 6 | 6 |
 | Fase 3 — MQTT & Real-time | 7 | 7 |
-| Fase 4 — Frontend | 12 | 3 |
+| Fase 4 — Frontend | 12 | 5 |
 | Fase 5 — Firmware | 7 | 0 |
 | Fase 6 — Deployment | 5 | 0 |
-| **TOTAL** | **44** | **23** |
+| **TOTAL** | **44** | **25** |
 
 > Update tabel ini setiap kali sebuah task pindah status jadi DONE, supaya progress keseluruhan gampang dipantau.
 

@@ -56,3 +56,75 @@ export const authApi = {
 
   getMe: () => apiFetch("/auth/me"),
 };
+
+// ── Device Endpoints ──────────────────────────────────────────────────────────
+export const deviceApi = {
+  getDevices: () => apiFetch("/devices"),
+
+  getDevice: (id) => apiFetch(`/devices/${id}`),
+
+  claimDevice: (deviceCode) =>
+    apiFetch("/devices/claim", {
+      method: "POST",
+      body: JSON.stringify({ device_code: deviceCode }),
+    }),
+
+  updateDevice: (id, data) =>
+    apiFetch(`/devices/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(data),
+    }),
+
+  releaseDevice: (id) =>
+    apiFetch(`/devices/${id}`, {
+      method: "DELETE",
+    }),
+
+  sendCommand: (id, command) =>
+    apiFetch(`/devices/${id}/command`, {
+      method: "POST",
+      body: JSON.stringify(command),
+    }),
+
+  getHistory: (id, params = {}) => {
+    const query = new URLSearchParams(params).toString();
+    return apiFetch(`/devices/${id}/history${query ? `?${query}` : ""}`);
+  },
+
+  getEvents: (id, limit = 100) => apiFetch(`/devices/${id}/events?limit=${limit}`),
+
+  getAccessList: (id) => apiFetch(`/devices/${id}/access`),
+
+  grantAccess: (id, data) =>
+    apiFetch(`/devices/${id}/access`, {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+
+  updateAccessRole: (id, userId, role) =>
+    apiFetch(`/devices/${id}/access/${userId}`, {
+      method: "PATCH",
+      body: JSON.stringify({ role }),
+    }),
+
+  revokeAccess: (id, userId) =>
+    apiFetch(`/devices/${id}/access/${userId}`, {
+      method: "DELETE",
+    }),
+};
+
+// ── Admin Endpoints ───────────────────────────────────────────────────────────
+export const adminApi = {
+  getDevices: () => apiFetch("/admin/devices"),
+  generateDevice: (data) =>
+    apiFetch("/admin/devices", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+  getUsers: () => apiFetch("/admin/users"),
+  updateUserRole: (id, global_role) =>
+    apiFetch(`/admin/users/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify({ global_role }),
+    }),
+};
