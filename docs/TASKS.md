@@ -99,8 +99,13 @@
 ## FASE 3 — Backend: MQTT Bridge & Real-time
 
 ### Task 3.1 — MQTT Client Service di Backend
-- **Status:** TODO
-- **Output:** service yang connect ke Mosquitto sebagai admin/backend client, subscribe wildcard `maceration/+/telemetry` dan `maceration/+/status`
+- **Status:** DONE
+- **Output:** service yang connect ke Mosquitto sebagai admin/backend client, subscribe wildcard `maceration/+/telemetry`, `maceration/+/status`, dan `maceration/+/command/ack`
+- **Files dibuat/diubah:**
+  - `src/config/mqtt.js` — baru, singleton MQTT client (mqtt.connect) dengan auto-reconnect setiap 3 detik
+  - `src/services/mqttService.js` — baru, wire event connect/reconnect/error/message; dispatch ke handler berdasarkan topic type; expose `initMqttHandlers()` dan `publishCommand()` (untuk Task 3.5)
+  - `src/index.js` — import mqtt config (trigger koneksi), panggil `initMqttHandlers` dengan placeholder callbacks
+  - `package.json` — tambah dependency `mqtt`
 - **Dependency:** Task 0.3
 
 ### Task 3.2 — Handler Telemetry → Simpan DB + Broadcast
@@ -270,11 +275,11 @@
 | Fase 0 — Fondasi | 3 | 3 |
 | Fase 1 — Auth | 4 | 4 |
 | Fase 2 — Device & Klaim | 6 | 6 |
-| Fase 3 — MQTT & Real-time | 7 | 0 |
+| Fase 3 — MQTT & Real-time | 7 | 1 |
 | Fase 4 — Frontend | 12 | 0 |
 | Fase 5 — Firmware | 7 | 0 |
 | Fase 6 — Deployment | 5 | 0 |
-| **TOTAL** | **44** | **13** |
+| **TOTAL** | **44** | **14** |
 
 > Update tabel ini setiap kali sebuah task pindah status jadi DONE, supaya progress keseluruhan gampang dipantau.
 
