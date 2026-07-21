@@ -1,0 +1,13 @@
+# Normalize line endings for all text files.
+# This tells Git to store everything with LF in the repo, and let each
+# person's local Git config (autocrlf) handle conversion on checkout.
+# Prevents the "LF will be replaced by CRLF" warnings on Windows.
+
+* text=auto eol=lf
+
+# Binary files — don't touch line endings at all
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.ico binary
+*.zip binary
