@@ -120,8 +120,13 @@
 - **Dependency:** Task 3.1, Task 2.1
 
 ### Task 3.3 — Handler Status Online/Offline
-- **Status:** TODO
+- **Status:** DONE
 - **Output:** update `devices.connection_status`, insert ke `device_events`, broadcast `device_status_changed`
+- **Files dibuat/diubah:**
+  - `src/services/deviceCache.js` — baru, shared TTL cache `device_code → UUID` (dipakai telemetryService & statusService, hindari N+1 DB hit per detik); expose `resolveDeviceId()` + `evictDeviceCache()`
+  - `src/services/statusService.js` — baru, `handleStatus()`: validasi state, resolve ID, `updateDeviceConnectionStatus`, `logEvent` (device_online/device_offline), broadcast `device_status_changed`
+  - `src/services/telemetryService.js` — refactor: gunakan shared `deviceCache` (hapus local cache duplikat)
+  - `src/index.js` — import & wire `handleStatus` sebagai `onStatus` handler nyata
 - **Dependency:** Task 3.2
 
 ### Task 3.4 — Setup Socket.IO Server & Room per Device
@@ -281,11 +286,11 @@
 | Fase 0 — Fondasi | 3 | 3 |
 | Fase 1 — Auth | 4 | 4 |
 | Fase 2 — Device & Klaim | 6 | 6 |
-| Fase 3 — MQTT & Real-time | 7 | 2 |
+| Fase 3 — MQTT & Real-time | 7 | 3 |
 | Fase 4 — Frontend | 12 | 0 |
 | Fase 5 — Firmware | 7 | 0 |
 | Fase 6 — Deployment | 5 | 0 |
-| **TOTAL** | **44** | **15** |
+| **TOTAL** | **44** | **16** |
 
 > Update tabel ini setiap kali sebuah task pindah status jadi DONE, supaya progress keseluruhan gampang dipantau.
 

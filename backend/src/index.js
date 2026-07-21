@@ -10,6 +10,7 @@ import deviceRoutes from "./routes/deviceRoutes.js";
 import { initSocketIO } from "./config/socket.js";
 import { initMqttHandlers } from "./services/mqttService.js";
 import { handleTelemetry } from "./services/telemetryService.js";
+import { handleStatus } from "./services/statusService.js";
 
 // Trigger MQTT connection on startup
 import "./config/mqtt.js";
@@ -38,10 +39,7 @@ initSocketIO(httpServer);
 initMqttHandlers({
   onTelemetry: handleTelemetry,
 
-  onStatus: (deviceCode, payload) => {
-    // Task 3.3: update connection_status in DB + broadcast device_status_changed
-    console.log(`[mqtt:status] ${deviceCode}`, payload);
-  },
+  onStatus: handleStatus,
 
   onCommandAck: (deviceCode, payload) => {
     // Task 3.5: forward ack to the waiting Socket.IO room
