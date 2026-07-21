@@ -18,13 +18,13 @@
 - **Dependency:** tidak ada
 
 ### Task 0.2 — Setup database & migrasi skema
-- **Status:** TODO
+- **Status:** DONE
 - **Output:** koneksi PostgreSQL jalan, semua tabel dari rancangan (`users`, `devices`, `device_access`, `device_logs`, `device_events`) terbuat lewat migration (pakai `node-pg-migrate` atau `Prisma`/`Knex`, pilih salah satu)
 - **Detail:** termasuk enum types, foreign key, index pada `device_code`, `email`
 - **Dependency:** Task 0.1
 
 ### Task 0.3 — Setup MQTT broker (Mosquitto) lokal untuk development
-- **Status:** TODO
+- **Status:** DONE
 - **Output:** Mosquitto jalan di lokal/docker, bisa publish/subscribe manual pakai `mosquitto_pub`/`mosquitto_sub` untuk uji koneksi awal (auth belum perlu final di tahap ini, bisa allow_anonymous dulu untuk dev)
 - **Dependency:** tidak ada (paralel dengan 0.1)
 
@@ -33,18 +33,18 @@
 ## FASE 1 — Backend: Auth & User Management
 
 ### Task 1.1 — Model & repository layer untuk `users`
-- **Status:** TODO
+- **Status:** DONE
 - **Output:** fungsi CRUD dasar ke tabel `users` (create, findByEmail, findById, updateRole)
 - **Dependency:** Task 0.2
 
 ### Task 1.2 — Endpoint Register & Login
-- **Status:** TODO
+- **Status:** DONE
 - **Output:** `POST /api/v1/auth/register`, `POST /api/v1/auth/login` — hash password bcrypt, return JWT saat login
 - **Acceptance criteria:** bisa register user baru, login dapat token, password salah ditolak, email duplikat ditolak
 - **Dependency:** Task 1.1
 
 ### Task 1.3 — Middleware Auth (JWT) & Middleware Role Check
-- **Status:** TODO
+- **Status:** DONE
 - **Output:** middleware `requireAuth` (verifikasi JWT, isi `req.user`) dan `requireGlobalRole('superadmin')` untuk endpoint admin
 - **Dependency:** Task 1.2
 
@@ -261,14 +261,14 @@
 
 | Fase | Total Task | Selesai |
 |---|---|---|
-| Fase 0 — Fondasi | 3 | 1 |
-| Fase 1 — Auth | 4 | 0 |
+| Fase 0 — Fondasi | 3 | 3 |
+| Fase 1 — Auth | 4 | 3 |
 | Fase 2 — Device & Klaim | 6 | 0 |
 | Fase 3 — MQTT & Real-time | 7 | 0 |
 | Fase 4 — Frontend | 12 | 0 |
 | Fase 5 — Firmware | 7 | 0 |
 | Fase 6 — Deployment | 5 | 0 |
-| **TOTAL** | **44** | **1** |
+| **TOTAL** | **44** | **6** |
 
 > Update tabel ini setiap kali sebuah task pindah status jadi DONE, supaya progress keseluruhan gampang dipantau.
 
