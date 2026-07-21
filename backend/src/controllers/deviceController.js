@@ -1,4 +1,10 @@
-import { generateDevice, DeviceError } from "../services/deviceService.js";
+import {
+  generateDevice,
+  claimDeviceByCode,
+  listMyDevices,
+  getDeviceDetail,
+  DeviceError,
+} from "../services/deviceService.js";
 
 /**
  * POST /api/v1/admin/devices
@@ -29,6 +35,69 @@ export async function adminGenerateDevice(req, res) {
       return res.status(err.statusCode).json({ error: err.message });
     }
     console.error("[deviceController.adminGenerateDevice]", err);
+    return res.status(500).json({ error: "internal server error" });
+  }
+}
+
+/**
+ * POST /api/v1/devices/claim
+ * Claims an unclaimed device (by device_code) on behalf of the logged-in user,
+ * granting them the 'owner' role and recording a device_claimed event.
+ */
+export async function claimDevice(req, res) {
+  try {
+    const { device_code } = req.body || {};
+    const device = await claimDeviceByCode({ deviceCode: device_code, userId: req.user.id });
+
+    return res.status(200).json({
+      device: {
+        id: device.id,
+        device_code: device.device_code,
+        name: device.name,
+        status: device.status,
+        connection_status: device.connection_status,
+        owner_id: device.owner_id,
+        claimed_at: device.claimed_at,
+      },
+    });
+  } catch (err) {
+    if (err instanceof DeviceError) {
+      return res.status(err.statusCode).json({ error: err.message });
+    }
+    console.error("[deviceController.claimDevice]", err);
+    return res.status(500).json({ error: "internal server error" });
+  }
+}
+
+/**
+ * GET /api/v1/devices
+ * Lists all devices the logged-in user has access to (owner/operator/viewer),
+ * including their role on each device.
+ */
+export async function listDevices(req, res) {
+  try {
+    const devices = await listMyDevices(req.user.id);
+    return res.status(200).json({ devices });
+  } catch (err) {
+    console.error("[deviceController.listDevices]", err);
+    return res.status(500).json({ error: "internal server error" });
+  }
+}
+
+/**
+ * GET /api/v1/devices/:id
+ * Returns detail for a single device, including the caller's role on it.
+ * 404 if the device doesn't exist, 403 if the user has no access to it.
+ */
+export async function getDevice(req, res) {
+  try {
+    const device = await getDeviceDetail({ deviceId: req.params.id, userId: req.user.id });
+    return res.status(200).json({ device });
+  } catch (err) {
+    if (err instanceof DeviceError) {
+      return res.status(err.statusCode).json({ error: err.message });
+    }
+    console.error("[deviceController.getDevice]", err);
     return res.status(500).json({ error: "internal server error" });
   }
 }
