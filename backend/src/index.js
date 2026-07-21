@@ -6,6 +6,7 @@ import dotenv from "dotenv";
 import authRoutes from "./routes/authRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
 import deviceRoutes from "./routes/deviceRoutes.js";
+import mqttAuthRoutes from "./routes/mqttAuthRoutes.js";
 
 import { initSocketIO } from "./config/socket.js";
 import { initMqttHandlers } from "./services/mqttService.js";
@@ -22,6 +23,7 @@ dotenv.config();
 const app = express();
 app.use(cors());
 app.use(express.json());
+app.use(express.urlencoded({ extended: false })); // required by go-auth form-encoded callbacks
 
 app.get("/api/v1/health", (req, res) => {
   res.json({ status: "ok", service: "maceration-iot-backend" });
@@ -30,6 +32,7 @@ app.get("/api/v1/health", (req, res) => {
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/admin", adminRoutes);
 app.use("/api/v1/devices", deviceRoutes);
+app.use("/api/v1/mqtt", mqttAuthRoutes);
 
 // ── HTTP server + Socket.IO ───────────────────────────────────────────────────
 // Socket.IO must attach to a raw http.Server, not the express app directly.

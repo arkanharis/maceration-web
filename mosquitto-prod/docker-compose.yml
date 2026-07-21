@@ -1,0 +1,32 @@
+services:
+  mosquitto:
+    # iegomez/mosquitto-go-auth ships with the go-auth plugin pre-built
+    image: iegomez/mosquitto-go-auth:latest
+    container_name: maceration-mosquitto
+    ports:
+      - "1883:1883"
+    volumes:
+      - ./mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+    environment:
+      # Passed to mosquitto.conf via go-auth if needed
+      - BACKEND_URL=http://backend:4000
+    depends_on:
+      - redis
+    restart: unless-stopped
+    networks:
+      - maceration-net
+
+  # Redis is used by go-auth to cache auth/acl results
+  redis:
+    image: redis:7-alpine
+    container_name: maceration-redis
+    restart: unless-stopped
+    networks:
+      - maceration-net
+
+networks:
+  maceration-net:
+    # This network should be shared with the backend service
+    # (defined in the main docker-compose.yml at the project root)
+    external: true
+    name: maceration-net
