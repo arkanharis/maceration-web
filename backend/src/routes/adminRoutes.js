@@ -1,28 +1,29 @@
 import { Router } from "express";
+import { requireAuth } from "../middlewares/requireAuth.js";
+import { requireGlobalRole } from "../middlewares/requireGlobalRole.js";
 import { adminGenerateDevice } from "../controllers/deviceController.js";
 import {
   adminGetAllDevices,
   adminGetAllUsers,
-  adminPatchUserRole,
+  adminPatchUser,
+  adminDeleteUserHandler,
+  adminUnclaimDeviceHandler,
+  adminDeleteDeviceHandler,
 } from "../controllers/adminController.js";
-import { requireAuth } from "../middlewares/requireAuth.js";
-import { requireGlobalRole } from "../middlewares/requireGlobalRole.js";
+
+const adminGuard = [requireAuth, requireGlobalRole("superadmin")];
 
 const router = Router();
 
-// Shorthand — all admin routes require a valid JWT + superadmin role.
-const adminGuard = [requireAuth, requireGlobalRole("superadmin")];
+// ── Devices ────────────────────────────────────────────────────────────────
+router.get("/devices",              ...adminGuard, adminGetAllDevices);
+router.post("/devices",             ...adminGuard, adminGenerateDevice);
+router.delete("/devices/:id/claim", ...adminGuard, adminUnclaimDeviceHandler);
+router.delete("/devices/:id",       ...adminGuard, adminDeleteDeviceHandler);
 
-// Task 2.2 — Generate a new device (device_code + secret returned once)
-router.post("/devices", ...adminGuard, adminGenerateDevice);
-
-// Task 2.6 — Admin overview: all devices in the system (claimed + unclaimed)
-router.get("/devices", ...adminGuard, adminGetAllDevices);
-
-// Task 2.6 — Admin overview: all users
-router.get("/users", ...adminGuard, adminGetAllUsers);
-
-// Task 2.6 — Promote / demote a user's global role
-router.patch("/users/:id", ...adminGuard, adminPatchUserRole);
+// ── Users ──────────────────────────────────────────────────────────────────
+router.get("/users",         ...adminGuard, adminGetAllUsers);
+router.patch("/users/:id",   ...adminGuard, adminPatchUser);
+router.delete("/users/:id",  ...adminGuard, adminDeleteUserHandler);
 
 export default router;

@@ -74,20 +74,82 @@ export async function updateUserRole(id, globalRole) {
 }
 
 /**
+ * Update a user's own profile (name and/or password_hash).
+ * Only updates fields that are provided (non-null).
+ * @param {string} id - UUID
+ * @param {Object} fields
+ * @param {string} [fields.name]
+ * @param {string} [fields.passwordHash]
+ * @returns {Promise<Object|null>}
+ */
+export async function updateUserProfile(id, { name, passwordHash } = {}) {
+  const sets = [];
+  const values = [id];
+  if (name !== undefined) { sets.push(`name = $${values.push(name)}`); }
+  if (passwordHash !== undefined) { sets.push(`password_hash = $${values.push(passwordHash)}`); }
+  if (sets.length === 0) return findUserById(id);
+  const query = `
+    UPDATE users SET ${sets.join(", ")}
+    WHERE id = $1
+    RETURNING id, name, email, global_role, created_at
+  `;
+  const { rows } = await pool.query(query, values);
+  return rows[0] || null;
+}
+
+/**
+ * Admin: update a user's name and/or email.
+ * @param {string} id - UUID
+ * @param {Object} fields
+ * @param {string} [fields.name]
+ * @param {string} [fields.email]
+ * @returns {Promise<Object|null>}
+ */
+export async function adminUpdateUser(id, { name, email } = {}) {
+  const sets = [];
+  const values = [id];
+  if (name !== undefined) { sets.push(`name = $${values.push(name)}`); }
+  if (email !== undefined) { sets.push(`email = $${values.push(email)}`); }
+  if (sets.length === 0) return findUserById(id);
+  const query = `
+    UPDATE users SET ${sets.join(", ")}
+    WHERE id = $1
+    RETURNING id, name, email, global_role, created_at
+  `;
+  const { rows } = await pool.query(query, values);
+  return rows[0] || null;
+}
+
+/**
+ * Delete a user by id. Cascades handled at service layer (devices → unclaimed).
+ * @param {string} id - UUID
+ * @returns {Promise<boolean>} true if deleted, false if not found
+ */
+export async function deleteUser(id) {
+  const { rowCount } = await pool.query(`DELETE FROM users WHERE id = $1`, [id]);
+  return rowCount > 0;
+}
+
+/**
  * List all users in the system (admin panel, Task 2.6).
  * Includes a count of how many devices each user owns (owner role),
  * useful for the superadmin overview.
  * @returns {Promise<Object[]>}
  */
-export async function listAllUsers() {
+export async function listAllUsers({ search } = {}) {
+  const values = [];
+  const where = search
+    ? `WHERE u.name ILIKE $${values.push(`%${search}%`)} OR u.email ILIKE $${values.push(`%${search}%`)}`
+    : "";
   const query = `
     SELECT u.id, u.name, u.email, u.global_role, u.created_at,
            COUNT(d.id)::int AS owned_device_count
     FROM users u
     LEFT JOIN devices d ON d.owner_id = u.id
+    ${where}
     GROUP BY u.id
     ORDER BY u.created_at DESC
   `;
-  const { rows } = await pool.query(query);
+  const { rows } = await pool.query(query, values);
   return rows;
 }

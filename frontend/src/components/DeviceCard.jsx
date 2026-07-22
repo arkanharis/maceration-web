@@ -104,7 +104,18 @@ export default function DeviceCard({ device }) {
 
       {/* Footer Info */}
       <div className="flex items-center justify-between text-[10px] font-mono text-[#6B6862] pt-1">
-        <span>Owner: {device.owner_name || "Pemilik Akun"}</span>
+        <span>
+          {role !== "owner" && device.owner_name ? (
+            <span
+              onClick={(e) => { e.preventDefault(); window.location.href = `/users/${device.owner_id}`; }}
+              className="text-[#3A5F43] hover:underline cursor-pointer font-medium"
+            >
+              Pemilik: {device.owner_name}
+            </span>
+          ) : (
+            <span>Pemilik Akun</span>
+          )}
+        </span>
         <span>
           {device.last_seen_at
             ? `Aktif: ${new Date(device.last_seen_at).toLocaleTimeString()}`

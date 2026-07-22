@@ -8,6 +8,7 @@ import RegisterPage from "./pages/RegisterPage.jsx";
 import DashboardPage from "./pages/DashboardPage.jsx";
 import DeviceDetailPage from "./pages/DeviceDetailPage.jsx";
 import AdminPage from "./pages/AdminPage.jsx";
+import ProfilePage from "./pages/ProfilePage.jsx";
 import NotFoundPage from "./pages/NotFoundPage.jsx";
 
 function AppRoutes() {
@@ -52,6 +53,16 @@ function AppRoutes() {
           element={
             <ProtectedRoute requireSuperadmin={true}>
               <AdminPage />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Profile Route */}
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <ProfilePage />
             </ProtectedRoute>
           }
         />

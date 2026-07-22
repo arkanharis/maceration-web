@@ -36,10 +36,14 @@
 #define RESET_HOLD_MS     3000               // tahan 3 detik untuk reset
 
 // ── Relay Pins (active-LOW) ──────────────────────────────────
-const int RELAY_PINS[4]  = {13, 12, 27, 26};
+// Use constexpr to avoid multiple-definition issues when this header
+// is included in multiple translation units.
+constexpr int RELAY_PINS[4]  = {13, 12, 27, 26};
 
 // ── Button Pins (INPUT_PULLUP, active-LOW) ───────────────────
-const int BUTTON_PINS[4] = {2, 4, 16, 17};
+// Use constexpr to avoid multiple-definition issues when this header
+// is included in multiple translation units.
+constexpr int BUTTON_PINS[4] = {2, 4, 16, 17};
 
 // ── Buzzer Pin ───────────────────────────────────────────────
 #define BUZZER_PIN        23

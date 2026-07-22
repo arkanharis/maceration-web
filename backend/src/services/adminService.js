@@ -1,5 +1,15 @@
-import { listAllDevices } from "../repositories/deviceRepository.js";
-import { listAllUsers, findUserById, updateUserRole } from "../repositories/userRepository.js";
+import { pool } from "../config/db.js";
+import bcrypt from "bcrypt";
+import {
+  findUserById,
+  findUserByEmail,
+  updateUserProfile,
+  adminUpdateUser,
+  deleteUser,
+  listAllUsers,
+} from "../repositories/userRepository.js";
+import { releaseDevice } from "../repositories/deviceRepository.js";
+import { listAllDevices, deleteDevice } from "../repositories/deviceRepository.js";
 
 export class AdminError extends Error {
   constructor(message, statusCode = 400) {
@@ -9,54 +19,94 @@ export class AdminError extends Error {
   }
 }
 
-const VALID_GLOBAL_ROLES = ["user", "superadmin"];
+// ── List ────────────────────────────────────────────────────────────────────
 
-/**
- * Return every device in the system (unclaimed + claimed), with owner info.
- * Admin-only (Task 2.6).
- * @returns {Promise<Object[]>}
- */
-export async function adminListAllDevices() {
-  return listAllDevices();
+export async function adminListAllDevices({ search } = {}) {
+  return listAllDevices({ search });
 }
 
-/**
- * Return every user in the system, with their owned-device count.
- * Admin-only (Task 2.6).
- * @returns {Promise<Object[]>}
- */
-export async function adminListAllUsers() {
-  return listAllUsers();
+export async function adminListAllUsers({ search } = {}) {
+  return listAllUsers({ search });
 }
 
+// ── Edit User ───────────────────────────────────────────────────────────────
+
 /**
- * Update the global_role of a user (promote to superadmin, or demote back to user).
- * Prevents a superadmin from accidentally changing their own role.
- * Admin-only (Task 2.6).
- *
- * @param {Object} params
- * @param {string} params.targetUserId - UUID of the user to update
- * @param {string} params.callerUserId - UUID of the superadmin making the request
- * @param {string} params.globalRole   - 'user' | 'superadmin'
- * @returns {Promise<Object>} the updated user row
- * @throws {AdminError} 400 invalid role | 404 user not found | 403 self-demotion
+ * Admin: update a user's name and/or email.
+ * Prevents editing own account from admin panel (use /auth/me instead).
  */
-export async function adminUpdateUserRole({ targetUserId, callerUserId, globalRole }) {
-  if (!VALID_GLOBAL_ROLES.includes(globalRole)) {
-    throw new AdminError(
-      `invalid global_role "${globalRole}"; must be one of: ${VALID_GLOBAL_ROLES.join(", ")}`,
-      400
-    );
+export async function adminEditUser({ targetUserId, callerUserId, name, email }) {
+  if (!name && !email) {
+    throw new AdminError("at least one field (name or email) is required", 400);
   }
-
   if (targetUserId === callerUserId) {
-    throw new AdminError("superadmin cannot change their own global_role", 403);
+    throw new AdminError("use /auth/me to edit your own profile", 403);
   }
 
   const user = await findUserById(targetUserId);
-  if (!user) {
-    throw new AdminError("user not found", 404);
+  if (!user) throw new AdminError("user not found", 404);
+
+  // Check email uniqueness if changing email
+  if (email && email !== user.email) {
+    const existing = await findUserByEmail(email);
+    if (existing) throw new AdminError("email already in use", 409);
   }
 
-  return updateUserRole(targetUserId, globalRole);
+  return adminUpdateUser(targetUserId, {
+    name:  name?.trim()  || undefined,
+    email: email?.trim() || undefined,
+  });
+}
+
+// ── Delete User ─────────────────────────────────────────────────────────────
+
+/**
+ * Admin: delete a user.
+ * - Devices they own are unclaimed (not deleted).
+ * - Their device_access entries cascade-deleted via FK.
+ * Cannot delete yourself.
+ */
+export async function adminDeleteUser({ targetUserId, callerUserId }) {
+  if (targetUserId === callerUserId) {
+    throw new AdminError("cannot delete your own account", 403);
+  }
+
+  const user = await findUserById(targetUserId);
+  if (!user) throw new AdminError("user not found", 404);
+
+  // Unclaim all devices this user owns before deleting them
+  await pool.query(
+    `UPDATE devices SET owner_id = NULL, status = 'unclaimed', claimed_at = NULL
+     WHERE owner_id = $1`,
+    [targetUserId]
+  );
+
+  const deleted = await deleteUser(targetUserId);
+  if (!deleted) throw new AdminError("user not found", 404);
+
+  return { message: `user ${user.email} deleted successfully` };
+}
+
+// ── Device Management ────────────────────────────────────────────────────────
+
+/**
+ * Admin: unclaim a device (reset to unclaimed, remove all device_access).
+ */
+export async function adminUnclaimDevice(deviceId) {
+  await pool.query(
+    `UPDATE devices SET owner_id = NULL, status = 'unclaimed', claimed_at = NULL
+     WHERE id = $1`,
+    [deviceId]
+  );
+  await pool.query(`DELETE FROM device_access WHERE device_id = $1`, [deviceId]);
+  return { message: "device unclaimed successfully" };
+}
+
+/**
+ * Admin: permanently delete a device (cascades: access, logs, events via FK ON DELETE CASCADE).
+ */
+export async function adminDeleteDevice(deviceId) {
+  const deleted = await deleteDevice(deviceId);
+  if (!deleted) throw new AdminError("device not found", 404);
+  return { message: "device deleted successfully" };
 }

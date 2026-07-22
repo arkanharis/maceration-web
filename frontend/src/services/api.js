@@ -55,6 +55,12 @@ export const authApi = {
     }),
 
   getMe: () => apiFetch("/auth/me"),
+
+  updateMe: (data) =>
+    apiFetch("/auth/me", {
+      method: "PATCH",
+      body: JSON.stringify(data),
+    }),
 };
 
 // ── Device Endpoints ──────────────────────────────────────────────────────────
@@ -115,16 +121,30 @@ export const deviceApi = {
 
 // ── Admin Endpoints ───────────────────────────────────────────────────────────
 export const adminApi = {
-  getDevices: () => apiFetch("/admin/devices"),
+  getDevices: (search = "") =>
+    apiFetch(`/admin/devices${search ? `?search=${encodeURIComponent(search)}` : ""}`),
+
   generateDevice: (data) =>
     apiFetch("/admin/devices", {
       method: "POST",
       body: JSON.stringify(data),
     }),
-  getUsers: () => apiFetch("/admin/users"),
-  updateUserRole: (id, global_role) =>
+
+  unclaimDevice: (id) =>
+    apiFetch(`/admin/devices/${id}/claim`, { method: "DELETE" }),
+
+  deleteDevice: (id) =>
+    apiFetch(`/admin/devices/${id}`, { method: "DELETE" }),
+
+  getUsers: (search = "") =>
+    apiFetch(`/admin/users${search ? `?search=${encodeURIComponent(search)}` : ""}`),
+
+  editUser: (id, data) =>
     apiFetch(`/admin/users/${id}`, {
       method: "PATCH",
-      body: JSON.stringify({ global_role }),
+      body: JSON.stringify(data),
     }),
+
+  deleteUser: (id) =>
+    apiFetch(`/admin/users/${id}`, { method: "DELETE" }),
 };

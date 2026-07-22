@@ -1,5 +1,5 @@
 import bcrypt from "bcrypt";
-import { createUser, findUserByEmail } from "../repositories/userRepository.js";
+import { createUser, findUserByEmail, findUserById, updateUserProfile } from "../repositories/userRepository.js";
 import { signToken } from "../utils/jwt.js";
 
 const SALT_ROUNDS = 10;
@@ -91,4 +91,39 @@ export async function loginUser({ email, password }) {
   const { password_hash, ...user } = userRow;
 
   return { user, token };
+}
+
+/**
+ * Update logged-in user's own profile (name and/or password).
+ */
+export async function updateUserSelf({ userId, name, currentPassword, newPassword }) {
+  const hasNameChange = name !== undefined && name.trim().length > 0;
+  const hasPasswordChange = newPassword !== undefined;
+
+  if (!hasNameChange && !hasPasswordChange) {
+    throw new AuthError("at least one field (name or newPassword) is required", 400);
+  }
+
+  const userRow = await findUserByEmail(
+    (await findUserById(userId))?.email
+  );
+  if (!userRow) throw new AuthError("user not found", 404);
+
+  let passwordHash;
+  if (hasPasswordChange) {
+    if (!currentPassword) {
+      throw new AuthError("current_password is required to change password", 400);
+    }
+    if (newPassword.length < 8) {
+      throw new AuthError("new password must be at least 8 characters", 400);
+    }
+    const matches = await bcrypt.compare(currentPassword, userRow.password_hash);
+    if (!matches) throw new AuthError("current_password is incorrect", 401);
+    passwordHash = await bcrypt.hash(newPassword, SALT_ROUNDS);
+  }
+
+  return updateUserProfile(userId, {
+    name: hasNameChange ? name.trim() : undefined,
+    passwordHash,
+  });
 }

@@ -33,12 +33,15 @@ export default function Navbar({ user, onLogout }) {
         <div className="flex items-center space-x-4">
           {user ? (
             <>
-              <div className="flex items-center space-x-2 text-xs text-[#6B6862]">
-                <div className="w-7 h-7 rounded-full bg-[#E2E0D7] flex items-center justify-center text-[#1A1A1A]">
-                  <User className="w-4 h-4" />
+              <Link
+                to="/profile"
+                className="flex items-center space-x-2 text-xs text-[#6B6862] hover:text-[#1A1A1A] transition-colors group"
+              >
+                <div className="w-7 h-7 rounded-full bg-[#E2E0D7] flex items-center justify-center text-[#1A1A1A] group-hover:bg-[#3A5F43] group-hover:text-[#F9F8F3] transition-colors font-semibold text-xs">
+                  {(user?.name || user?.email || "?")[0].toUpperCase()}
                 </div>
                 <div className="hidden sm:block text-right">
-                  <div className="font-semibold text-[#1A1A1A] text-xs">
+                  <div className="font-semibold text-[#1A1A1A] text-xs group-hover:text-[#3A5F43] transition-colors">
                     {user.name || user.email}
                   </div>
                   <div className="font-mono text-[10px] text-[#6B6862]">
@@ -51,7 +54,7 @@ export default function Navbar({ user, onLogout }) {
                     )}
                   </div>
                 </div>
-              </div>
+              </Link>
 
               <button
                 onClick={handleLogout}

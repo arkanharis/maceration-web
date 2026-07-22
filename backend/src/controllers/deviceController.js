@@ -3,6 +3,8 @@ import {
   claimDeviceByCode,
   listMyDevices,
   getDeviceDetail,
+  renameDevice,
+  releaseDeviceForUser,
   DeviceError,
 } from "../services/deviceService.js";
 
@@ -98,6 +100,42 @@ export async function getDevice(req, res) {
       return res.status(err.statusCode).json({ error: err.message });
     }
     console.error("[deviceController.getDevice]", err);
+    return res.status(500).json({ error: "internal server error" });
+  }
+}
+
+/**
+ * PATCH /api/v1/devices/:id
+ * Rename a device. Owner only.
+ * Body: { name }
+ */
+export async function patchDevice(req, res) {
+  try {
+    const { name } = req.body || {};
+    const device = await renameDevice({ deviceId: req.params.id, userId: req.user.id, name });
+    return res.status(200).json({ device });
+  } catch (err) {
+    if (err instanceof DeviceError) {
+      return res.status(err.statusCode).json({ error: err.message });
+    }
+    console.error("[deviceController.patchDevice]", err);
+    return res.status(500).json({ error: "internal server error" });
+  }
+}
+
+/**
+ * DELETE /api/v1/devices/:id
+ * Release (unclaim) a device back to unclaimed state. Owner only.
+ */
+export async function deleteDevice(req, res) {
+  try {
+    const result = await releaseDeviceForUser({ deviceId: req.params.id, userId: req.user.id });
+    return res.status(200).json(result);
+  } catch (err) {
+    if (err instanceof DeviceError) {
+      return res.status(err.statusCode).json({ error: err.message });
+    }
+    console.error("[deviceController.deleteDevice]", err);
     return res.status(500).json({ error: "internal server error" });
   }
 }

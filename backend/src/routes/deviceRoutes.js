@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { claimDevice, listDevices, getDevice } from "../controllers/deviceController.js";
+import { claimDevice, listDevices, getDevice, patchDevice, deleteDevice } from "../controllers/deviceController.js";
 import {
   getDeviceAccessList,
   postDeviceAccess,
@@ -15,6 +15,8 @@ const router = Router();
 router.get("/", requireAuth, listDevices);
 router.post("/claim", requireAuth, claimDevice);
 router.get("/:id", requireAuth, getDevice);
+router.patch("/:id", requireAuth, patchDevice);
+router.delete("/:id", requireAuth, deleteDevice);
 router.post("/:id/command", requireAuth, postDeviceCommand);
 router.get("/:id/history", requireAuth, getHistory);
 router.get("/:id/events", requireAuth, getEvents);

@@ -99,7 +99,11 @@ export async function findDeviceByCodeWithSecret(deviceCode) {
  * Joins owner name & email for the admin overview so there's no N+1 lookup.
  * @returns {Promise<Object[]>}
  */
-export async function listAllDevices() {
+export async function listAllDevices({ search } = {}) {
+  const values = [];
+  const where = search
+    ? `WHERE d.device_code ILIKE $${values.push(`%${search}%`)} OR d.name ILIKE $${values.push(`%${search}%`)} OR u.name ILIKE $${values.push(`%${search}%`)}`
+    : "";
   const query = `
     SELECT d.id, d.device_code, d.name, d.status, d.connection_status,
            d.last_seen_at, d.owner_id, d.created_at, d.claimed_at,
@@ -107,9 +111,10 @@ export async function listAllDevices() {
            u.email AS owner_email
     FROM devices d
     LEFT JOIN users u ON u.id = d.owner_id
+    ${where}
     ORDER BY d.created_at DESC
   `;
-  const { rows } = await pool.query(query);
+  const { rows } = await pool.query(query, values);
   return rows;
 }
 
@@ -123,9 +128,12 @@ export async function listDevicesForUser(userId) {
   const query = `
     SELECT d.id, d.device_code, d.name, d.status, d.connection_status,
            d.last_seen_at, d.owner_id, d.created_at, d.claimed_at,
-           da.role AS role
+           da.role AS role,
+           u.name  AS owner_name,
+           u.id    AS owner_id
     FROM devices d
     INNER JOIN device_access da ON da.device_id = d.id
+    LEFT JOIN users u ON u.id = d.owner_id
     WHERE da.user_id = $1
     ORDER BY d.created_at DESC
   `;
@@ -169,6 +177,16 @@ export async function releaseDevice(deviceId) {
   `;
   const { rows } = await pool.query(query, [deviceId]);
   return rows[0] || null;
+}
+
+/**
+ * Admin: permanently delete a device and all its access/log/event records.
+ * @param {string} deviceId - UUID
+ * @returns {Promise<boolean>}
+ */
+export async function deleteDevice(deviceId) {
+  const { rowCount } = await pool.query(`DELETE FROM devices WHERE id = $1`, [deviceId]);
+  return rowCount > 0;
 }
 
 /**

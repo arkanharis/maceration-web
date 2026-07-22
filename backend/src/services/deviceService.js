@@ -2,18 +2,18 @@ import crypto from "crypto";
 import bcrypt from "bcrypt";
 import {
   createDevice,
-  getNextDeviceCodeNumber,
   findDeviceByCode,
   findDeviceById,
   claimDevice,
   listDevicesForUser,
+  updateDeviceName,
+  releaseDevice,
 } from "../repositories/deviceRepository.js";
 import { grantAccess, getUserRoleForDevice } from "../repositories/deviceAccessRepository.js";
 import { logEvent } from "../repositories/deviceEventRepository.js";
+import { pool } from "../config/db.js";
 
 const SALT_ROUNDS = 10;
-const DEVICE_CODE_PREFIX = "MC-";
-const DEVICE_CODE_PAD_LENGTH = 4;
 const MAX_GENERATE_RETRIES = 5;
 
 export class DeviceError extends Error {
@@ -44,6 +44,15 @@ function generateDeviceSecret() {
 }
 
 /**
+ * Generate a random, unpredictable device_code in the format MC-xxxxxxxx
+ * (MC- prefix + 4 random bytes as 8 hex chars, e.g. "MC-a3f82c1b").
+ * Not sequential, not guessable.
+ */
+function generateRandomDeviceCode() {
+  return `MC-${crypto.randomBytes(4).toString("hex")}`;
+}
+
+/**
  * Generate a new device: auto-assigns a unique device_code, generates a
  * random device_secret, stores only the hash, and returns the plaintext
  * secret ONCE (the caller — the controller — must never log or persist it
@@ -57,8 +66,7 @@ export async function generateDevice({ name } = {}) {
   let lastError;
 
   for (let attempt = 0; attempt < MAX_GENERATE_RETRIES; attempt++) {
-    const nextNum = await getNextDeviceCodeNumber();
-    const deviceCode = formatDeviceCode(nextNum);
+    const deviceCode = generateRandomDeviceCode();  // Task C: random, not sequential
     const deviceSecret = generateDeviceSecret();
     const deviceSecretHash = await bcrypt.hash(deviceSecret, SALT_ROUNDS);
 
@@ -70,11 +78,7 @@ export async function generateDevice({ name } = {}) {
       });
       return { device, deviceSecret };
     } catch (err) {
-      // Unique violation on device_code (concurrent generation) — retry with a fresh number.
-      if (err.code === "23505") {
-        lastError = err;
-        continue;
-      }
+      if (err.code === "23505") { lastError = err; continue; }  // retry on collision
       throw err;
     }
   }
@@ -149,14 +153,41 @@ export async function listMyDevices(userId) {
  */
 export async function getDeviceDetail({ deviceId, userId }) {
   const device = await findDeviceById(deviceId);
-  if (!device) {
-    throw new DeviceError("device not found", 404);
-  }
+  if (!device) throw new DeviceError("device not found", 404);
 
   const role = await getUserRoleForDevice(userId, deviceId);
-  if (!role) {
-    throw new DeviceError("you do not have access to this device", 403);
-  }
+  if (!role) throw new DeviceError("you do not have access to this device", 403);
 
   return { ...device, role };
+}
+
+/**
+ * Task F: Rename a device. Owner only.
+ */
+export async function renameDevice({ deviceId, userId, name }) {
+  if (!name || !name.trim()) throw new DeviceError("name is required", 400);
+
+  const role = await getUserRoleForDevice(userId, deviceId);
+  if (!role) throw new DeviceError("device not found or no access", 404);
+  if (role !== "owner") throw new DeviceError("only the owner can rename a device", 403);
+
+  const device = await updateDeviceName(deviceId, name.trim());
+  if (!device) throw new DeviceError("device not found", 404);
+
+  await logEvent({ deviceId, userId, eventType: "device_renamed", detail: { name: name.trim() } });
+  return device;
+}
+
+/**
+ * Release a device (owner unclaims it): removes all access, resets status.
+ */
+export async function releaseDeviceForUser({ deviceId, userId }) {
+  const role = await getUserRoleForDevice(userId, deviceId);
+  if (!role) throw new DeviceError("device not found or no access", 404);
+  if (role !== "owner") throw new DeviceError("only the owner can release a device", 403);
+
+  await pool.query(`DELETE FROM device_access WHERE device_id = $1`, [deviceId]);
+  await releaseDevice(deviceId);
+
+  return { message: "device released successfully" };
 }

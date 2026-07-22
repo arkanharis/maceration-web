@@ -1,65 +1,72 @@
 import {
   adminListAllDevices,
   adminListAllUsers,
-  adminUpdateUserRole,
+  adminEditUser,
+  adminDeleteUser,
+  adminUnclaimDevice,
+  adminDeleteDevice,
   AdminError,
 } from "../services/adminService.js";
 
-/**
- * GET /api/v1/admin/devices
- * Returns every device in the system (claimed + unclaimed), including owner info.
- * Superadmin only.
- */
+function handleError(err, res, fn) {
+  if (err instanceof AdminError) return res.status(err.statusCode).json({ error: err.message });
+  console.error(`[adminController.${fn}]`, err);
+  return res.status(500).json({ error: "internal server error" });
+}
+
+/** GET /api/v1/admin/devices?search= */
 export async function adminGetAllDevices(req, res) {
   try {
-    const devices = await adminListAllDevices();
+    const devices = await adminListAllDevices({ search: req.query.search });
     return res.status(200).json({ devices });
-  } catch (err) {
-    console.error("[adminController.adminGetAllDevices]", err);
-    return res.status(500).json({ error: "internal server error" });
-  }
+  } catch (err) { return handleError(err, res, "adminGetAllDevices"); }
 }
 
-/**
- * GET /api/v1/admin/users
- * Returns all users in the system, with owned-device counts.
- * Superadmin only.
- */
+/** GET /api/v1/admin/users?search= */
 export async function adminGetAllUsers(req, res) {
   try {
-    const users = await adminListAllUsers();
+    const users = await adminListAllUsers({ search: req.query.search });
     return res.status(200).json({ users });
-  } catch (err) {
-    console.error("[adminController.adminGetAllUsers]", err);
-    return res.status(500).json({ error: "internal server error" });
-  }
+  } catch (err) { return handleError(err, res, "adminGetAllUsers"); }
 }
 
-/**
- * PATCH /api/v1/admin/users/:id
- * Updates the global_role of a user.
- * Body: { global_role: 'user' | 'superadmin' }
- * Superadmin only; cannot change own role.
- */
-export async function adminPatchUserRole(req, res) {
+/** PATCH /api/v1/admin/users/:id — edit name/email */
+export async function adminPatchUser(req, res) {
   try {
-    const { global_role } = req.body || {};
-    if (!global_role) {
-      return res.status(400).json({ error: "global_role is required in request body" });
-    }
-
-    const updatedUser = await adminUpdateUserRole({
+    const { name, email } = req.body || {};
+    const user = await adminEditUser({
       targetUserId: req.params.id,
       callerUserId: req.user.id,
-      globalRole: global_role,
+      name,
+      email,
     });
+    return res.status(200).json({ user });
+  } catch (err) { return handleError(err, res, "adminPatchUser"); }
+}
 
-    return res.status(200).json({ user: updatedUser });
-  } catch (err) {
-    if (err instanceof AdminError) {
-      return res.status(err.statusCode).json({ error: err.message });
-    }
-    console.error("[adminController.adminPatchUserRole]", err);
-    return res.status(500).json({ error: "internal server error" });
-  }
+/** DELETE /api/v1/admin/users/:id */
+export async function adminDeleteUserHandler(req, res) {
+  try {
+    const result = await adminDeleteUser({
+      targetUserId: req.params.id,
+      callerUserId: req.user.id,
+    });
+    return res.status(200).json(result);
+  } catch (err) { return handleError(err, res, "adminDeleteUser"); }
+}
+
+/** DELETE /api/v1/admin/devices/:id/claim — unclaim device */
+export async function adminUnclaimDeviceHandler(req, res) {
+  try {
+    const result = await adminUnclaimDevice(req.params.id);
+    return res.status(200).json(result);
+  } catch (err) { return handleError(err, res, "adminUnclaimDevice"); }
+}
+
+/** DELETE /api/v1/admin/devices/:id — permanently delete device */
+export async function adminDeleteDeviceHandler(req, res) {
+  try {
+    const result = await adminDeleteDevice(req.params.id);
+    return res.status(200).json(result);
+  } catch (err) { return handleError(err, res, "adminDeleteDevice"); }
 }

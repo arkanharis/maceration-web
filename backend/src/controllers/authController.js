@@ -1,4 +1,4 @@
-import { registerUser, loginUser, AuthError } from "../services/authService.js";
+import { registerUser, loginUser, updateUserSelf, AuthError } from "../services/authService.js";
 
 export async function register(req, res) {
   try {
@@ -49,4 +49,28 @@ export async function me(req, res) {
  */
 export async function logout(req, res) {
   return res.status(200).json({ message: "logged out successfully" });
+}
+
+/**
+ * PATCH /api/v1/auth/me
+ * Allows the logged-in user to update their own name and/or password.
+ * Body: { name?, current_password?, new_password? }
+ */
+export async function updateMe(req, res) {
+  try {
+    const { name, current_password, new_password } = req.body || {};
+    const user = await updateUserSelf({
+      userId: req.user.id,
+      name,
+      currentPassword: current_password,
+      newPassword: new_password,
+    });
+    return res.status(200).json({ user });
+  } catch (err) {
+    if (err instanceof AuthError) {
+      return res.status(err.statusCode).json({ error: err.message });
+    }
+    console.error("[authController.updateMe]", err);
+    return res.status(500).json({ error: "internal server error" });
+  }
 }
