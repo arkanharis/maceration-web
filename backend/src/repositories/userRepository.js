@@ -15,29 +15,39 @@ import { pool } from "../config/db.js";
  * @param {string} [params.globalRole] - 'user' | 'superadmin', defaults to 'user'
  * @returns {Promise<Object>} the created user row
  */
-export async function createUser({ name, email, passwordHash, globalRole = "user" }) {
+export async function createUser({ name, email, passwordHash = null, googleId = null, globalRole = "user" }) {
   const query = `
-    INSERT INTO users (name, email, password_hash, global_role)
-    VALUES ($1, $2, $3, $4)
-    RETURNING id, name, email, global_role, created_at
+    INSERT INTO users (name, email, password_hash, google_id, global_role)
+    VALUES ($1, $2, $3, $4, $5)
+    RETURNING id, name, email, password_hash, google_id, global_role, created_at
   `;
-  const values = [name, email, passwordHash, globalRole];
+  const values = [name, email, passwordHash, googleId, globalRole];
   const { rows } = await pool.query(query, values);
   return rows[0];
 }
 
 /**
- * Find a user by email. Includes password_hash — needed for login checks.
+ * Find a user by email. Includes password_hash and google_id — needed for login checks.
  * @param {string} email
  * @returns {Promise<Object|null>}
  */
 export async function findUserByEmail(email) {
   const query = `
-    SELECT id, name, email, password_hash, global_role, created_at
+    SELECT id, name, email, password_hash, google_id, global_role, created_at
     FROM users
     WHERE email = $1
   `;
   const { rows } = await pool.query(query, [email]);
+  return rows[0] || null;
+}
+
+export async function findUserByGoogleId(googleId) {
+  const query = `
+    SELECT id, name, email, password_hash, google_id, global_role, created_at
+    FROM users
+    WHERE google_id = $1
+  `;
+  const { rows } = await pool.query(query, [googleId]);
   return rows[0] || null;
 }
 
@@ -48,11 +58,22 @@ export async function findUserByEmail(email) {
  */
 export async function findUserById(id) {
   const query = `
-    SELECT id, name, email, global_role, created_at
+    SELECT id, name, email, google_id, global_role, created_at
     FROM users
     WHERE id = $1
   `;
   const { rows } = await pool.query(query, [id]);
+  return rows[0] || null;
+}
+
+export async function linkGoogleId(userId, googleId) {
+  const query = `
+    UPDATE users
+    SET google_id = $2
+    WHERE id = $1
+    RETURNING id, name, email, password_hash, google_id, global_role, created_at
+  `;
+  const { rows } = await pool.query(query, [userId, googleId]);
   return rows[0] || null;
 }
 

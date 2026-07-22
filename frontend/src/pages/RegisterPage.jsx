@@ -1,17 +1,19 @@
-import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import React, { useState, useEffect, useCallback } from "react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
 import { UserPlus, AlertCircle, Loader2 } from "lucide-react";
 
 export default function RegisterPage() {
-  const { register, isAuthenticated } = useAuth();
+  const { register, googleRegister, isAuthenticated } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [infoMessage, setInfoMessage] = useState(null);
 
   // If already logged in, redirect to dashboard
   React.useEffect(() => {
@@ -19,6 +21,12 @@ export default function RegisterPage() {
       navigate("/");
     }
   }, [isAuthenticated, navigate]);
+
+  useEffect(() => {
+    if (location.state?.fromGoogle) {
+      setInfoMessage(location.state.googleMessage || "Silakan daftar menggunakan Google.");
+    }
+  }, [location.state]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -45,6 +53,62 @@ export default function RegisterPage() {
     }
   };
 
+  const handleGoogleCredentialResponse = useCallback(
+    async (response) => {
+      if (!response?.credential) {
+        setError("Gagal autentikasi Google.");
+        return;
+      }
+
+      setError(null);
+      setLoading(true);
+      try {
+        await googleRegister(response.credential);
+        navigate("/", { replace: true });
+      } catch (err) {
+        setError(err.message || "Gagal daftar dengan Google.");
+      } finally {
+        setLoading(false);
+      }
+    },
+    [googleRegister, navigate]
+  );
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const initGoogleButton = () => {
+      if (!window.google?.accounts?.id || cancelled) return;
+
+      window.google.accounts.id.initialize({
+        client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
+        callback: handleGoogleCredentialResponse,
+        context: "signup",
+      });
+      window.google.accounts.id.renderButton(
+        document.getElementById("googleRegisterButton"),
+        { theme: "outline", size: "large", width: "100%", text: "signup_with" }
+      );
+    };
+
+    if (window.google?.accounts?.id) {
+      initGoogleButton();
+      return;
+    }
+
+    const intervalId = setInterval(() => {
+      if (window.google?.accounts?.id) {
+        initGoogleButton();
+        clearInterval(intervalId);
+      }
+    }, 100);
+
+    return () => {
+      cancelled = true;
+      clearInterval(intervalId);
+    };
+  }, [handleGoogleCredentialResponse]);
+
   return (
     <div className="max-w-md mx-auto my-12">
       <div className="lab-card p-6 shadow-sm space-y-6">
@@ -63,6 +127,11 @@ export default function RegisterPage() {
         </div>
 
         {/* Error Alert */}
+        {infoMessage && (
+          <div className="p-3 bg-[#3A5F43]/10 border border-[#3A5F43]/30 rounded text-xs text-[#1A1A1A] flex items-start space-x-2">
+            <span>{infoMessage}</span>
+          </div>
+        )}
         {error && (
           <div className="p-3 bg-[#C84B31]/10 border border-[#C84B31]/30 rounded text-xs text-[#C84B31] flex items-start space-x-2">
             <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
@@ -133,6 +202,11 @@ export default function RegisterPage() {
             )}
           </button>
         </form>
+
+        <div className="pt-3">
+          <div className="text-center text-xs text-[#6B6862] mb-2">atau daftar dengan</div>
+          <div id="googleRegisterButton" className="w-full"></div>
+        </div>
 
         {/* Footer Link */}
         <div className="text-center pt-2 border-t border-[#E2E0D7] text-xs text-[#6B6862]">

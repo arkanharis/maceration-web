@@ -1,4 +1,4 @@
-import { registerUser, loginUser, updateUserSelf, AuthError } from "../services/authService.js";
+import { registerUser, loginUser, loginWithGoogle, registerWithGoogle, updateUserSelf, AuthError } from "../services/authService.js";
 
 export async function register(req, res) {
   try {
@@ -28,34 +28,35 @@ export async function login(req, res) {
   }
 }
 
-/**
- * GET /api/v1/auth/me
- * Requires requireAuth middleware — req.user is already populated with the
- * current user's fresh data (id, name, email, global_role, created_at).
- */
+export async function googleAuth(req, res) {
+  try {
+    const { id_token, action } = req.body || {};
+    if (action === "register") {
+      const { user, token } = await registerWithGoogle({ idToken: id_token });
+      return res.status(200).json({ user, token });
+    }
+
+    const { user, token } = await loginWithGoogle({ idToken: id_token });
+    return res.status(200).json({ user, token });
+  } catch (err) {
+    if (err instanceof AuthError) {
+      const payload = { error: err.message };
+      if (err.errorCode) payload.errorCode = err.errorCode;
+      return res.status(err.statusCode).json(payload);
+    }
+    console.error("[authController.googleAuth]", err);
+    return res.status(500).json({ error: "internal server error" });
+  }
+}
+
 export async function me(req, res) {
   return res.status(200).json({ user: req.user });
 }
 
-/**
- * POST /api/v1/auth/logout
- *
- * JWTs are stateless, so the server can't "invalidate" a token by itself
- * without a blacklist/allowlist store (e.g. Redis) — out of scope for this
- * app's scale (<20 users, per rancangan). The real logout action is the
- * client discarding its stored token. This endpoint exists so the client
- * has a clear, authenticated action to call as part of the logout flow,
- * and as a place to plug in token blacklisting later if ever needed.
- */
 export async function logout(req, res) {
   return res.status(200).json({ message: "logged out successfully" });
 }
 
-/**
- * PATCH /api/v1/auth/me
- * Allows the logged-in user to update their own name and/or password.
- * Body: { name?, current_password?, new_password? }
- */
 export async function updateMe(req, res) {
   try {
     const { name, current_password, new_password } = req.body || {};

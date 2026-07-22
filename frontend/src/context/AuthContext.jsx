@@ -42,6 +42,22 @@ export function AuthProvider({ children }) {
     return data.user;
   };
 
+  const googleLogin = async (idToken) => {
+    const data = await authApi.googleLogin(idToken);
+    localStorage.setItem("token", data.token);
+    setToken(data.token);
+    setUser(data.user);
+    return data.user;
+  };
+
+  const googleRegister = async (idToken) => {
+    const data = await authApi.googleRegister(idToken);
+    localStorage.setItem("token", data.token);
+    setToken(data.token);
+    setUser(data.user);
+    return data.user;
+  };
+
   const register = async (userData) => {
     const data = await authApi.register(userData);
     localStorage.setItem("token", data.token);
@@ -62,6 +78,8 @@ export function AuthProvider({ children }) {
     token,
     loading,
     login,
+    googleLogin,
+    googleRegister,
     register,
     logout,
     isAuthenticated: !!user,

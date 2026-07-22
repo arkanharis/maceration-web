@@ -15,7 +15,7 @@ exports.up = (pgm) => {
     },
     name: { type: "varchar(255)", notNull: true },
     email: { type: "varchar(255)", notNull: true, unique: true },
-    password_hash: { type: "varchar(255)", notNull: true },
+    password_hash: { type: "varchar(255)" },
     global_role: { type: "global_role", notNull: true, default: "user" },
     created_at: {
       type: "timestamp",

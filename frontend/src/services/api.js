@@ -54,6 +54,18 @@ export const authApi = {
       body: JSON.stringify(userData),
     }),
 
+  googleLogin: (idToken) =>
+    apiFetch("/auth/google", {
+      method: "POST",
+      body: JSON.stringify({ id_token: idToken, action: "login" }),
+    }),
+
+  googleRegister: (idToken) =>
+    apiFetch("/auth/google", {
+      method: "POST",
+      body: JSON.stringify({ id_token: idToken, action: "register" }),
+    }),
+
   getMe: () => apiFetch("/auth/me"),
 
   updateMe: (data) =>

@@ -1,10 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
 import { Beaker, AlertCircle, Loader2 } from "lucide-react";
 
 export default function LoginPage() {
-  const { login, isAuthenticated } = useAuth();
+  const { login, googleLogin, googleRegister, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -16,7 +16,7 @@ export default function LoginPage() {
   const from = location.state?.from?.pathname || "/";
 
   // If already logged in, redirect immediately
-  React.useEffect(() => {
+  useEffect(() => {
     if (isAuthenticated) {
       navigate(from, { replace: true });
     }
@@ -41,6 +41,70 @@ export default function LoginPage() {
       setLoading(false);
     }
   };
+
+  const handleGoogleCredentialResponse = useCallback(
+    async (response) => {
+      if (!response?.credential) {
+        setError("Gagal autentikasi Google.");
+        return;
+      }
+
+      setLoading(true);
+      try {
+        await googleLogin(response.credential);
+        navigate(from, { replace: true });
+      } catch (err) {
+        if (err?.data?.errorCode === "GOOGLE_ACCOUNT_NOT_REGISTERED") {
+          try {
+            await googleRegister(response.credential);
+            navigate(from, { replace: true });
+            return;
+          } catch (registerErr) {
+            setError(registerErr.message || "Gagal registrasi dengan Google.");
+            return;
+          }
+        }
+        setError(err.message || "Gagal masuk dengan Google.");
+      } finally {
+        setLoading(false);
+      }
+    },
+    [googleLogin, googleRegister, navigate, from]
+  );
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const initGoogleButton = () => {
+      if (!window.google?.accounts?.id || cancelled) return;
+
+      window.google.accounts.id.initialize({
+        client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
+        callback: handleGoogleCredentialResponse,
+      });
+      window.google.accounts.id.renderButton(
+        document.getElementById("googleSignInButton"),
+        { theme: "outline", size: "large", width: "100%" }
+      );
+    };
+
+    if (window.google?.accounts?.id) {
+      initGoogleButton();
+      return;
+    }
+
+    const intervalId = setInterval(() => {
+      if (window.google?.accounts?.id) {
+        initGoogleButton();
+        clearInterval(intervalId);
+      }
+    }, 100);
+
+    return () => {
+      cancelled = true;
+      clearInterval(intervalId);
+    };
+  }, [handleGoogleCredentialResponse]);
 
   return (
     <div className="max-w-md mx-auto my-12">
@@ -114,6 +178,11 @@ export default function LoginPage() {
             )}
           </button>
         </form>
+
+        <div className="pt-3">
+          <div className="text-center text-xs text-[#6B6862] mb-2">atau masuk dengan</div>
+          <div id="googleSignInButton" className="w-full"></div>
+        </div>
 
         {/* Footer Link */}
         <div className="text-center pt-2 border-t border-[#E2E0D7] text-xs text-[#6B6862]">
