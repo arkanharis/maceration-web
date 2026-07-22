@@ -59,12 +59,13 @@ export async function logout(req, res) {
 
 export async function updateMe(req, res) {
   try {
-    const { name, current_password, new_password } = req.body || {};
+    const { name, current_password, new_password, about } = req.body || {};
     const user = await updateUserSelf({
       userId: req.user.id,
       name,
       currentPassword: current_password,
       newPassword: new_password,
+      about,
     });
     return res.status(200).json({ user });
   } catch (err) {

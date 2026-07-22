@@ -68,27 +68,19 @@ export default function UserProfilePage() {
           <div>
             <h1 className="font-serif text-2xl font-bold text-[#1A1A1A]">{user.name}</h1>
             <p className="text-sm text-[#6B6862]">{user.email}</p>
-            <div className="mt-2 inline-flex items-center gap-2 text-[11px] font-mono uppercase tracking-widest px-3 py-1 rounded border border-[#D3D0C3] bg-[#F1F0EA] text-[#1A1A1A]">
-              {user.global_role === "superadmin" ? (
-                <><ShieldCheck className="w-3.5 h-3.5" /> Superadmin</>
-              ) : (
-                <>User</>
-              )}
-            </div>
           </div>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="lab-card p-4">
             <div className="text-[10px] font-mono uppercase tracking-widest text-[#6B6862] mb-2">Tentang</div>
-            <p className="text-sm text-[#1A1A1A]">Informasi profil pengguna yang terhubung dengan perangkat.</p>
+            <p className="text-sm text-[#1A1A1A]">{user.about || "Pengguna ini belum menambahkan informasi tentang diri mereka."}</p>
           </div>
           <div className="lab-card p-4">
             <div className="text-[10px] font-mono uppercase tracking-widest text-[#6B6862] mb-2">Metadata</div>
             <div className="space-y-2 text-sm text-[#1A1A1A]">
               <div><strong>Nama:</strong> {user.name}</div>
               <div><strong>Email:</strong> {user.email}</div>
-              <div><strong>Peran Global:</strong> {user.global_role}</div>
             </div>
           </div>
         </div>

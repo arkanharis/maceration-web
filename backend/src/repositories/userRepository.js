@@ -15,13 +15,13 @@ import { pool } from "../config/db.js";
  * @param {string} [params.globalRole] - 'user' | 'superadmin', defaults to 'user'
  * @returns {Promise<Object>} the created user row
  */
-export async function createUser({ name, email, passwordHash = null, googleId = null, globalRole = "user" }) {
+export async function createUser({ name, email, passwordHash = null, googleId = null, globalRole = "user", about = null }) {
   const query = `
-    INSERT INTO users (name, email, password_hash, google_id, global_role)
-    VALUES ($1, $2, $3, $4, $5)
-    RETURNING id, name, email, password_hash, google_id, global_role, created_at
+    INSERT INTO users (name, email, password_hash, google_id, global_role, about)
+    VALUES ($1, $2, $3, $4, $5, $6)
+    RETURNING id, name, email, password_hash, google_id, global_role, about, created_at
   `;
-  const values = [name, email, passwordHash, googleId, globalRole];
+  const values = [name, email, passwordHash, googleId, globalRole, about];
   const { rows } = await pool.query(query, values);
   return rows[0];
 }
@@ -33,7 +33,7 @@ export async function createUser({ name, email, passwordHash = null, googleId = 
  */
 export async function findUserByEmail(email) {
   const query = `
-    SELECT id, name, email, password_hash, google_id, global_role, created_at
+    SELECT id, name, email, password_hash, google_id, global_role, about, created_at
     FROM users
     WHERE email = $1
   `;
@@ -43,7 +43,7 @@ export async function findUserByEmail(email) {
 
 export async function findUserByGoogleId(googleId) {
   const query = `
-    SELECT id, name, email, password_hash, google_id, global_role, created_at
+    SELECT id, name, email, password_hash, google_id, global_role, about, created_at
     FROM users
     WHERE google_id = $1
   `;
@@ -58,7 +58,7 @@ export async function findUserByGoogleId(googleId) {
  */
 export async function findUserById(id) {
   const query = `
-    SELECT id, name, email, google_id, global_role, created_at
+    SELECT id, name, email, google_id, global_role, about, created_at
     FROM users
     WHERE id = $1
   `;
@@ -103,16 +103,17 @@ export async function updateUserRole(id, globalRole) {
  * @param {string} [fields.passwordHash]
  * @returns {Promise<Object|null>}
  */
-export async function updateUserProfile(id, { name, passwordHash } = {}) {
+export async function updateUserProfile(id, { name, passwordHash, about } = {}) {
   const sets = [];
   const values = [id];
   if (name !== undefined) { sets.push(`name = $${values.push(name)}`); }
   if (passwordHash !== undefined) { sets.push(`password_hash = $${values.push(passwordHash)}`); }
+  if (about !== undefined) { sets.push(`about = $${values.push(about)}`); }
   if (sets.length === 0) return findUserById(id);
   const query = `
     UPDATE users SET ${sets.join(", ")}
     WHERE id = $1
-    RETURNING id, name, email, global_role, created_at
+    RETURNING id, name, email, global_role, about, created_at
   `;
   const { rows } = await pool.query(query, values);
   return rows[0] || null;

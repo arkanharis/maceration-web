@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { authApi } from "../services/api";
@@ -10,10 +10,18 @@ export default function ProfilePage() {
 
   const [nameForm, setNameForm] = useState({ name: user?.name || "" });
   const [passForm, setPassForm] = useState({ current_password: "", new_password: "", confirm: "" });
+  const [aboutForm, setAboutForm] = useState({ about: user?.about || "" });
   const [nameStatus, setNameStatus] = useState(null); // { type: "success"|"error", msg }
   const [passStatus, setPassStatus] = useState(null);
+  const [aboutStatus, setAboutStatus] = useState(null);
   const [nameSaving, setNameSaving] = useState(false);
   const [passSaving, setPassSaving] = useState(false);
+  const [aboutSaving, setAboutSaving] = useState(false);
+
+  useEffect(() => {
+    setNameForm({ name: user?.name || "" });
+    setAboutForm({ about: user?.about || "" });
+  }, [user]);
 
   async function handleSaveName(e) {
     e.preventDefault();
@@ -28,6 +36,21 @@ export default function ProfilePage() {
       setNameStatus({ type: "error", msg: err.message });
     } finally {
       setNameSaving(false);
+    }
+  }
+
+  async function handleSaveAbout(e) {
+    e.preventDefault();
+    setAboutSaving(true);
+    setAboutStatus(null);
+    try {
+      const res = await authApi.updateMe({ about: aboutForm.about });
+      setUser(res.user);
+      setAboutStatus({ type: "success", msg: "Tentang berhasil diperbarui." });
+    } catch (err) {
+      setAboutStatus({ type: "error", msg: err.message });
+    } finally {
+      setAboutSaving(false);
     }
   }
 
@@ -55,6 +78,9 @@ export default function ProfilePage() {
 
   const inputClass =
     "w-full px-3 py-2 text-sm bg-[#F9F8F3] border border-[#E2E0D7] rounded focus:outline-none focus:border-[#3A5F43] focus:ring-1 focus:ring-[#3A5F43] font-sans text-[#1A1A1A] placeholder:text-[#6B6862]";
+
+  const textareaClass =
+    "w-full min-h-[120px] px-3 py-2 text-sm bg-[#F9F8F3] border border-[#E2E0D7] rounded focus:outline-none focus:border-[#3A5F43] focus:ring-1 focus:ring-[#3A5F43] font-sans text-[#1A1A1A] placeholder:text-[#6B6862] resize-none";
 
   const Alert = ({ status }) => {
     if (!status) return null;
@@ -94,40 +120,33 @@ export default function ProfilePage() {
           <div>
             <div className="font-semibold text-[#1A1A1A] text-sm">{user?.name}</div>
             <div className="text-xs text-[#6B6862]">{user?.email}</div>
-            <div className="font-mono text-[10px] mt-0.5">
-              {user?.global_role === "superadmin" ? (
-                <span className="text-[#D97736] font-bold uppercase">Superadmin</span>
-              ) : (
-                <span className="text-[#6B6862] uppercase">User</span>
-              )}
-            </div>
           </div>
         </div>
 
-        {/* Edit Nama */}
+        {/* Edit Tentang */}
         <div className="lab-card p-5 mb-4">
           <div className="flex items-center gap-2 mb-4">
             <User className="w-4 h-4 text-[#3A5F43]" />
-            <h2 className="font-semibold text-sm text-[#1A1A1A]">Ubah Nama</h2>
+            <h2 className="font-semibold text-sm text-[#1A1A1A]">Edit Tentang</h2>
           </div>
-          <form onSubmit={handleSaveName} className="space-y-3">
+          <form onSubmit={handleSaveAbout} className="space-y-3">
             <div>
-              <label className="block text-xs text-[#6B6862] mb-1 font-medium">Nama Tampilan</label>
-              <input
-                className={inputClass}
-                value={nameForm.name}
-                onChange={(e) => setNameForm({ name: e.target.value })}
-                placeholder="Nama lengkap"
+              <label className="block text-xs text-[#6B6862] mb-1 font-medium">Tentang Saya</label>
+              <textarea
+                className={textareaClass}
+                value={aboutForm.about}
+                onChange={(e) => setAboutForm({ about: e.target.value })}
+                placeholder="Ceritakan sedikit tentang diri Anda atau penggunaan perangkat Anda."
               />
             </div>
-            <Alert status={nameStatus} />
+            <Alert status={aboutStatus} />
             <button
               type="submit"
-              disabled={nameSaving}
+              disabled={aboutSaving}
               className="flex items-center gap-2 px-4 py-2 bg-[#3A5F43] text-[#F9F8F3] text-xs font-medium rounded hover:bg-[#2F4E36] transition-colors disabled:opacity-50"
             >
               <Save className="w-3.5 h-3.5" />
-              {nameSaving ? "Menyimpan..." : "Simpan Nama"}
+              {aboutSaving ? "Menyimpan..." : "Simpan Tentang"}
             </button>
           </form>
         </div>

@@ -222,12 +222,13 @@ export async function registerWithGoogle({ idToken }) {
 /**
  * Update logged-in user's own profile (name and/or password).
  */
-export async function updateUserSelf({ userId, name, currentPassword, newPassword }) {
+export async function updateUserSelf({ userId, name, currentPassword, newPassword, about }) {
   const hasNameChange = name !== undefined && name.trim().length > 0;
   const hasPasswordChange = newPassword !== undefined;
+  const hasAboutChange = about !== undefined;
 
-  if (!hasNameChange && !hasPasswordChange) {
-    throw new AuthError("at least one field (name or newPassword) is required", 400);
+  if (!hasNameChange && !hasPasswordChange && !hasAboutChange) {
+    throw new AuthError("at least one field (name, about or newPassword) is required", 400);
   }
 
   const userRow = await findUserByEmail(
@@ -255,5 +256,6 @@ export async function updateUserSelf({ userId, name, currentPassword, newPasswor
   return updateUserProfile(userId, {
     name: hasNameChange ? name.trim() : undefined,
     passwordHash,
+    about: hasAboutChange ? about : undefined,
   });
 }

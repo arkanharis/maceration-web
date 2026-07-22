@@ -1,8 +1,9 @@
 import React from "react";
-import { NavLink } from "react-router-dom";
+import { NavLink, useLocation } from "react-router-dom";
 import { LayoutDashboard, Cpu, Share2, Shield, Activity } from "lucide-react";
 
 export default function Sidebar({ user }) {
+  const location = useLocation();
   const isSuperadmin = user?.global_role === "superadmin";
 
   const navItems = [
@@ -13,16 +14,29 @@ export default function Sidebar({ user }) {
       exact: true,
     },
     {
-      to: "/devices?filter=owned",
+      to: { pathname: "/devices", search: "?filter=owned" },
       label: "Alat Saya (Owner)",
       icon: Cpu,
     },
     {
-      to: "/devices?filter=shared",
+      to: { pathname: "/devices", search: "?filter=shared" },
       label: "Dibagikan ke Saya",
       icon: Share2,
     },
   ];
+
+  const isActiveItem = (item) => {
+    if (typeof item.to === "string") {
+      if (item.to === "/") {
+        return (
+          location.pathname === "/" ||
+          (location.pathname === "/devices" && (location.search === "" || location.search === "?filter=all"))
+        );
+      }
+      return location.pathname === item.to;
+    }
+    return location.pathname === item.to.pathname && location.search === item.to.search;
+  };
 
   return (
     <aside className="w-64 bg-[#F1F0EA] border-r border-[#E2E0D7] p-4 flex flex-col justify-between min-h-[calc(100vh-61px)]">
@@ -35,14 +49,15 @@ export default function Sidebar({ user }) {
           <nav className="space-y-1">
             {navItems.map((item) => {
               const Icon = item.icon;
+              const active = isActiveItem(item);
               return (
                 <NavLink
-                  key={item.to}
+                  key={typeof item.to === "string" ? item.to : `${item.to.pathname}${item.to.search}`}
                   to={item.to}
                   end={item.exact}
-                  className={({ isActive }) =>
+                  className={() =>
                     `flex items-center space-x-2.5 px-3 py-2 rounded text-xs font-medium transition-colors ${
-                      isActive
+                      active
                         ? "bg-[#3A5F43] text-[#F9F8F3] shadow-sm font-semibold"
                         : "text-[#1A1A1A] hover:bg-[#E2E0D7] hover:text-[#1A1A1A]"
                     }`
