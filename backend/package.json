@@ -6,10 +6,11 @@
   "type": "module",
   "scripts": {
     "start": "node src/index.js",
+    "build": "npx node-pg-migrate up",
     "dev": "nodemon src/index.js",
     "migrate:create": "node-pg-migrate create --migration-file-language js -j cjs",
-    "migrate:up": "dotenv -e .env -- node-pg-migrate up",
-    "migrate:down": "dotenv -e .env -- node-pg-migrate down",
+    "migrate:up": "npx node-pg-migrate up",
+    "migrate:down": "npx node-pg-migrate down",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
