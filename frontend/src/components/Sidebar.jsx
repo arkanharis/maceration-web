@@ -8,7 +8,7 @@ export default function Sidebar({ user }) {
 
   const navItems = [
     {
-      to: "/",
+      to: "/dashboard",
       label: "Dashboard Utama",
       icon: LayoutDashboard,
       exact: true,

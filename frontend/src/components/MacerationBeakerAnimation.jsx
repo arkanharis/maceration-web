@@ -322,7 +322,7 @@ export default function MacerationBeakerAnimation() {
       {/* Visual Header Badge */}
       <div className="flex items-center gap-2 mb-2 bg-[#F1F0EA] border border-[#E2E0D7] px-3 py-1 rounded-full text-xs font-mono text-[#6B6862] shadow-xs">
         <Sparkles className="w-3.5 h-3.5 text-[#D97736] animate-spin" style={{ animationDuration: "8s" }} />
-        <span>SIMULASI MASERASI AKTIF</span>
+        <span>SIMULASI MASERASI</span>
         <span className="w-1.5 h-1.5 rounded-full bg-[#3A5F43] animate-pulse-live" />
       </div>
 

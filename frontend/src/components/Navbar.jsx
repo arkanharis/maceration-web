@@ -1,9 +1,11 @@
 import React from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Beaker, LogOut, User, ShieldCheck } from "lucide-react";
 
 export default function Navbar({ user, onLogout }) {
   const navigate = useNavigate();
+  const location = useLocation();
+  const isLandingAuthenticated = user && location.pathname === "/";
 
   const handleLogout = () => {
     if (onLogout) onLogout();
@@ -31,15 +33,7 @@ export default function Navbar({ user, onLogout }) {
 
         {/* Navigation Links */}
         <div className="flex items-center space-x-3">
-          {user && (
-            <Link
-              to="/dashboard"
-              className="px-3 py-1.5 rounded text-xs font-mono font-semibold bg-[#3A5F43]/10 text-[#3A5F43] border border-[#3A5F43]/20 hover:bg-[#3A5F43] hover:text-[#F9F8F3] transition-colors"
-            >
-              DASHBOARD TELEMETRI
-            </Link>
-          )}
-          {user?.global_role === "superadmin" && (
+          {user?.global_role === "superadmin" && !isLandingAuthenticated && (
             <Link
               to="/admin"
               className="px-3 py-1.5 rounded text-xs font-mono font-semibold bg-[#D97736]/10 text-[#D97736] border border-[#D97736]/20 hover:bg-[#D97736] hover:text-[#F9F8F3] transition-colors hidden md:inline-block"
@@ -50,31 +44,42 @@ export default function Navbar({ user, onLogout }) {
         </div>
 
         {/* User Info & Actions */}
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-3">
           {user ? (
             <>
-              <Link
-                to="/profile"
-                className="flex items-center space-x-2 text-xs text-[#6B6862] hover:text-[#1A1A1A] transition-colors group"
-              >
-                <div className="w-7 h-7 rounded-full bg-[#E2E0D7] flex items-center justify-center text-[#1A1A1A] group-hover:bg-[#3A5F43] group-hover:text-[#F9F8F3] transition-colors font-semibold text-xs">
-                  {(user?.name || user?.email || "?")[0].toUpperCase()}
-                </div>
-                <div className="hidden sm:block text-right">
-                  <div className="font-semibold text-[#1A1A1A] text-xs group-hover:text-[#3A5F43] transition-colors">
-                    {user.name || user.email}
+              {isLandingAuthenticated && (
+                <Link
+                  to="/dashboard"
+                  className="px-3 py-1.5 rounded text-xs font-mono font-semibold bg-[#3A5F43]/10 text-[#3A5F43] border border-[#3A5F43]/20 hover:bg-[#3A5F43] hover:text-[#F9F8F3] transition-colors"
+                >
+                  DASHBOARD TELEMETRI
+                </Link>
+              )}
+
+              {!isLandingAuthenticated && (
+                <Link
+                  to="/profile"
+                  className="flex items-center space-x-2 text-xs text-[#6B6862] hover:text-[#1A1A1A] transition-colors group"
+                >
+                  <div className="w-7 h-7 rounded-full bg-[#E2E0D7] flex items-center justify-center text-[#1A1A1A] group-hover:bg-[#3A5F43] group-hover:text-[#F9F8F3] transition-colors font-semibold text-xs">
+                    {(user?.name || user?.email || "?")[0].toUpperCase()}
                   </div>
-                  <div className="font-mono text-[10px] text-[#6B6862]">
-                    {user.global_role === "superadmin" ? (
-                      <span className="text-[#D97736] font-bold flex items-center gap-0.5 justify-end">
-                        <ShieldCheck className="w-3 h-3 inline" /> SUPERADMIN
-                      </span>
-                    ) : (
-                      "USER"
-                    )}
+                  <div className="hidden sm:block text-right">
+                    <div className="font-semibold text-[#1A1A1A] text-xs group-hover:text-[#3A5F43] transition-colors">
+                      {user.name || user.email}
+                    </div>
+                    <div className="font-mono text-[10px] text-[#6B6862]">
+                      {user.global_role === "superadmin" ? (
+                        <span className="text-[#D97736] font-bold flex items-center gap-0.5 justify-end">
+                          <ShieldCheck className="w-3 h-3 inline" /> SUPERADMIN
+                        </span>
+                      ) : (
+                        "USER"
+                      )}
+                    </div>
                   </div>
-                </div>
-              </Link>
+                </Link>
+              )}
 
               <button
                 onClick={handleLogout}
