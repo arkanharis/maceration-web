@@ -29,6 +29,26 @@ export default function Navbar({ user, onLogout }) {
           </div>
         </Link>
 
+        {/* Navigation Links */}
+        <div className="flex items-center space-x-3">
+          {user && (
+            <Link
+              to="/dashboard"
+              className="px-3 py-1.5 rounded text-xs font-mono font-semibold bg-[#3A5F43]/10 text-[#3A5F43] border border-[#3A5F43]/20 hover:bg-[#3A5F43] hover:text-[#F9F8F3] transition-colors"
+            >
+              DASHBOARD TELEMETRI
+            </Link>
+          )}
+          {user?.global_role === "superadmin" && (
+            <Link
+              to="/admin"
+              className="px-3 py-1.5 rounded text-xs font-mono font-semibold bg-[#D97736]/10 text-[#D97736] border border-[#D97736]/20 hover:bg-[#D97736] hover:text-[#F9F8F3] transition-colors hidden md:inline-block"
+            >
+              ADMIN PANEL
+            </Link>
+          )}
+        </div>
+
         {/* User Info & Actions */}
         <div className="flex items-center space-x-4">
           {user ? (
