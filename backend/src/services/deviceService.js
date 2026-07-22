@@ -3,7 +3,9 @@ import bcrypt from "bcrypt";
 import {
   createDevice,
   findDeviceByCode,
+  findDeviceByCodeWithSecret,
   findDeviceById,
+  getNextDeviceCodeNumber,
   claimDevice,
   listDevicesForUser,
   updateDeviceName,
@@ -15,6 +17,8 @@ import { pool } from "../config/db.js";
 
 const SALT_ROUNDS = 10;
 const MAX_GENERATE_RETRIES = 5;
+const DEVICE_CODE_PREFIX = "MC-";
+const DEVICE_CODE_PAD_LENGTH = 4;
 
 export class DeviceError extends Error {
   constructor(message, statusCode = 400) {
@@ -44,15 +48,6 @@ function generateDeviceSecret() {
 }
 
 /**
- * Generate a random, unpredictable device_code in the format MC-xxxxxxxx
- * (MC- prefix + 4 random bytes as 8 hex chars, e.g. "MC-a3f82c1b").
- * Not sequential, not guessable.
- */
-function generateRandomDeviceCode() {
-  return `MC-${crypto.randomBytes(4).toString("hex")}`;
-}
-
-/**
  * Generate a new device: auto-assigns a unique device_code, generates a
  * random device_secret, stores only the hash, and returns the plaintext
  * secret ONCE (the caller — the controller — must never log or persist it
@@ -63,30 +58,18 @@ function generateRandomDeviceCode() {
  * @returns {Promise<{device: Object, deviceSecret: string}>}
  */
 export async function generateDevice({ name } = {}) {
-  let lastError;
+  const nextNumber = await getNextDeviceCodeNumber();
+  const deviceCode = formatDeviceCode(nextNumber);
+  const deviceSecret = generateDeviceSecret();
+  const deviceSecretHash = await bcrypt.hash(deviceSecret, SALT_ROUNDS);
 
-  for (let attempt = 0; attempt < MAX_GENERATE_RETRIES; attempt++) {
-    const deviceCode = generateRandomDeviceCode();  // Task C: random, not sequential
-    const deviceSecret = generateDeviceSecret();
-    const deviceSecretHash = await bcrypt.hash(deviceSecret, SALT_ROUNDS);
+  const device = await createDevice({
+    deviceCode,
+    deviceSecretHash,
+    name: name?.trim() || deviceCode,
+  });
 
-    try {
-      const device = await createDevice({
-        deviceCode,
-        deviceSecretHash,
-        name: name?.trim() || deviceCode,
-      });
-      return { device, deviceSecret };
-    } catch (err) {
-      if (err.code === "23505") { lastError = err; continue; }  // retry on collision
-      throw err;
-    }
-  }
-
-  throw new DeviceError(
-    "failed to generate a unique device code after several attempts, please try again",
-    500
-  );
+  return { device, deviceSecret };
 }
 
 /**
@@ -100,13 +83,16 @@ export async function generateDevice({ name } = {}) {
  * @returns {Promise<Object>} the claimed device row
  * @throws {DeviceError} 404 if device_code doesn't exist, 409 if already claimed
  */
-export async function claimDeviceByCode({ deviceCode, userId }) {
+export async function claimDeviceByCode({ deviceCode, deviceSecret, userId }) {
   const code = deviceCode?.trim();
   if (!code) {
     throw new DeviceError("device_code is required", 400);
   }
+  if (!deviceSecret || !deviceSecret.trim()) {
+    throw new DeviceError("device_secret is required", 400);
+  }
 
-  const existing = await findDeviceByCode(code);
+  const existing = await findDeviceByCodeWithSecret(code);
   if (!existing) {
     throw new DeviceError(`no device found with device_code "${code}"`, 404);
   }
@@ -114,8 +100,12 @@ export async function claimDeviceByCode({ deviceCode, userId }) {
     throw new DeviceError(`device "${code}" has already been claimed`, 409);
   }
 
-  // claimDevice only updates rows still 'unclaimed' — guards against a race
-  // where two users try to claim the same device at the same time.
+  const trimmedSecret = deviceSecret.trim();
+  const secretMatches = await bcrypt.compare(trimmedSecret, existing.device_secret_hash);
+  if (!secretMatches) {
+    throw new DeviceError("device_secret is incorrect", 401);
+  }
+
   const claimed = await claimDevice(existing.id, userId);
   if (!claimed) {
     throw new DeviceError(`device "${code}" has already been claimed`, 409);

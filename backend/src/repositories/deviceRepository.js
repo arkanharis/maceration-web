@@ -52,10 +52,11 @@ export async function getNextDeviceCodeNumber() {
  */
 export async function findDeviceById(id) {
   const query = `
-    SELECT id, device_code, name, status, connection_status, last_seen_at,
-           owner_id, created_at, claimed_at
-    FROM devices
-    WHERE id = $1
+    SELECT d.id, d.device_code, d.name, d.status, d.connection_status, d.last_seen_at,
+           d.owner_id, u.name AS owner_name, d.created_at, d.claimed_at
+    FROM devices d
+    LEFT JOIN users u ON u.id = d.owner_id
+    WHERE d.id = $1
   `;
   const { rows } = await pool.query(query, [id]);
   return rows[0] || null;

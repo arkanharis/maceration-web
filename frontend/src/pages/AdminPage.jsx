@@ -389,7 +389,7 @@ export default function AdminPage() {
                     onChange={(e) => setCustomName(e.target.value)}
                     className="w-full text-xs px-3 py-2 bg-[#F9F8F3] border border-[#E2E0D7] rounded font-sans"
                   />
-                  <p className="text-[10px] text-[#6B6862] mt-1">Device code otomatis digenerate secara acak (contoh: MC-a3f82c1b).</p>
+                  <p className="text-[10px] text-[#6B6862] mt-1">Device code otomatis digenerate secara berurutan (contoh: MC-0001).</p>
                 </div>
                 <div className="flex justify-end gap-2 pt-2 border-t border-[#E2E0D7]">
                   <button type="button" onClick={() => setIsGenerateOpen(false)} className="px-3 py-2 text-xs text-[#6B6862]">Batal</button>

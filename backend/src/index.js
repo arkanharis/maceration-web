@@ -7,6 +7,7 @@ import authRoutes from "./routes/authRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
 import deviceRoutes from "./routes/deviceRoutes.js";
 import mqttAuthRoutes from "./routes/mqttAuthRoutes.js";
+import userRoutes from "./routes/userRoutes.js";
 
 import { initSocketIO } from "./config/socket.js";
 import { initMqttHandlers } from "./services/mqttService.js";
@@ -33,6 +34,7 @@ app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/admin", adminRoutes);
 app.use("/api/v1/devices", deviceRoutes);
 app.use("/api/v1/mqtt", mqttAuthRoutes);
+app.use("/api/v1/users", userRoutes);
 
 // ── HTTP server + Socket.IO ───────────────────────────────────────────────────
 // Socket.IO must attach to a raw http.Server, not the express app directly.

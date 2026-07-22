@@ -4,6 +4,7 @@ import { X, Cpu, AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
 
 export default function ClaimDeviceModal({ isOpen, onClose, onSuccess }) {
   const [deviceCode, setDeviceCode] = useState("");
+  const [deviceSecret, setDeviceSecret] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [successMsg, setSuccessMsg] = useState(null);
@@ -16,23 +17,29 @@ export default function ClaimDeviceModal({ isOpen, onClose, onSuccess }) {
     setSuccessMsg(null);
 
     const trimmedCode = deviceCode.trim().toUpperCase();
+    const trimmedSecret = deviceSecret.trim();
     if (!trimmedCode) {
       setError("Kode alat wajib diisi (contoh: MC-0001)");
+      return;
+    }
+    if (!trimmedSecret) {
+      setError("Device secret wajib diisi untuk klaim.");
       return;
     }
 
     setLoading(true);
     try {
-      const res = await deviceApi.claimDevice(trimmedCode);
+      const res = await deviceApi.claimDevice(trimmedCode, trimmedSecret);
       setSuccessMsg(`Berhasil mengklaim instrumen ${res.device.device_code}!`);
       setDeviceCode("");
+      setDeviceSecret("");
       setTimeout(() => {
         onSuccess(res.device);
         onClose();
         setSuccessMsg(null);
       }, 1200);
     } catch (err) {
-      setError(err.message || "Gagal mengklaim alat. Periksa kembali kode alat.");
+      setError(err.message || "Gagal mengklaim alat. Periksa kembali kode alat dan secret.");
     } finally {
       setLoading(false);
     }
@@ -93,6 +100,21 @@ export default function ClaimDeviceModal({ isOpen, onClose, onSuccess }) {
               placeholder="MC-0001"
               disabled={loading}
               className="w-full font-mono text-sm px-3 py-2 bg-[#F9F8F3] border border-[#E2E0D7] rounded focus:outline-none focus:border-[#3A5F43] uppercase tracking-widest text-[#1A1A1A]"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-mono text-[#6B6862] uppercase tracking-wider mb-1">
+              Device Secret
+            </label>
+            <input
+              type="text"
+              required
+              value={deviceSecret}
+              onChange={(e) => setDeviceSecret(e.target.value)}
+              placeholder="Masukkan secret key perangkat"
+              disabled={loading}
+              className="w-full font-mono text-sm px-3 py-2 bg-[#F9F8F3] border border-[#E2E0D7] rounded focus:outline-none focus:border-[#3A5F43] text-[#1A1A1A]"
             />
           </div>
 

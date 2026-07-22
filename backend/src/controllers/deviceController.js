@@ -48,8 +48,12 @@ export async function adminGenerateDevice(req, res) {
  */
 export async function claimDevice(req, res) {
   try {
-    const { device_code } = req.body || {};
-    const device = await claimDeviceByCode({ deviceCode: device_code, userId: req.user.id });
+    const { device_code, device_secret } = req.body || {};
+    const device = await claimDeviceByCode({
+      deviceCode: device_code,
+      deviceSecret: device_secret,
+      userId: req.user.id,
+    });
 
     return res.status(200).json({
       device: {

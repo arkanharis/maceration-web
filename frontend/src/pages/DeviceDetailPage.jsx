@@ -251,7 +251,17 @@ export default function DeviceDetailPage() {
                 : "Belum Pernah"}
             </div>
             <div className="font-mono text-[10px] text-[#6B6862] mt-0.5">
-              Pemilik: {device.owner_name || "Milik Anda"}
+              Pemilik:{' '}
+              {device.owner_name ? (
+                <Link
+                  to={`/users/${device.owner_id}`}
+                  className="text-[#3A5F43] hover:underline"
+                >
+                  {device.owner_name}
+                </Link>
+              ) : (
+                "Milik Anda"
+              )}
             </div>
           </div>
         </div>

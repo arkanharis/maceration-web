@@ -69,10 +69,10 @@ export const deviceApi = {
 
   getDevice: (id) => apiFetch(`/devices/${id}`),
 
-  claimDevice: (deviceCode) =>
+  claimDevice: (deviceCode, deviceSecret) =>
     apiFetch("/devices/claim", {
       method: "POST",
-      body: JSON.stringify({ device_code: deviceCode }),
+      body: JSON.stringify({ device_code: deviceCode, device_secret: deviceSecret }),
     }),
 
   updateDevice: (id, data) =>
@@ -147,4 +147,8 @@ export const adminApi = {
 
   deleteUser: (id) =>
     apiFetch(`/admin/users/${id}`, { method: "DELETE" }),
+};
+
+export const userApi = {
+  getUserById: (id) => apiFetch(`/users/${id}`),
 };

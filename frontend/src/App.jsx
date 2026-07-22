@@ -9,6 +9,7 @@ import DashboardPage from "./pages/DashboardPage.jsx";
 import DeviceDetailPage from "./pages/DeviceDetailPage.jsx";
 import AdminPage from "./pages/AdminPage.jsx";
 import ProfilePage from "./pages/ProfilePage.jsx";
+import UserProfilePage from "./pages/UserProfilePage.jsx";
 import NotFoundPage from "./pages/NotFoundPage.jsx";
 
 function AppRoutes() {
@@ -57,12 +58,20 @@ function AppRoutes() {
           }
         />
 
-        {/* Profile Route */}
+        {/* Profile Routes */}
         <Route
           path="/profile"
           element={
             <ProtectedRoute>
               <ProfilePage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/users/:id"
+          element={
+            <ProtectedRoute>
+              <UserProfilePage />
             </ProtectedRoute>
           }
         />
